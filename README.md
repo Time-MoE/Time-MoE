@@ -2,6 +2,8 @@
   <h2><b><img src="figures/timemoe-logo.png" width=25/>Time-MoE: Billion-Scale Time Series Foundation Models with Mixture of Experts </b></h2>
 </div>
 
+## Introduction
+Time-MoE consists of a family of decoder-only transformer models with a mixture-of-experts architecture, operating in an auto-regressive manner to support any forecasting horizon and accommodate context lengths of up to 4096.
 ## Usage
 
 ### Installation

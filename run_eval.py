@@ -199,7 +199,6 @@ if __name__ == '__main__':
     parser.add_argument(
         '--context_length', '-c',
         type=int,
-        default=512,
         help='Context length'
     )
     parser.add_argument(
@@ -209,4 +208,15 @@ if __name__ == '__main__':
         help='Prediction length'
     )
     args = parser.parse_args()
+    if args.context_length is None:
+        if args.prediction_length == 96:
+            args.context_length = 512
+        elif args.prediction_length == 192:
+            args.context_length = 1024
+        elif args.prediction_length == 336:
+            args.context_length = 2048
+        elif args.prediction_length == 720:
+            args.context_length = 3072
+        else:
+            args.context_length = args.prediction_length * 4
     evaluate(args)
