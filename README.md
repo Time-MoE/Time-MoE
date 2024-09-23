@@ -2,4 +2,64 @@
   <h2><b><img src="figures/timemoe-logo.png" width=25/>Time-MoE: Billion-Scale Time Series Foundation Models with Mixture of Experts </b></h2>
 </div>
 
-Coming soon...
+## Usage
+
+### Installation
+1. Install Python 3.10+, and then install the dependencies:
+```shell
+pip install -r requirements.txt
+```
+
+2. [Optional] Install flash-attn. (For faster training and inference)
+```shell
+pip install flash-attn==2.6.3
+```
+
+### Download Models
+
+### Forecast
+
+General purpose:
+```python
+import torch
+from transformers import AutoModelForCausalLM
+
+context_length = 12
+seqs = torch.randn(2, context_length)  # tensor shape is [batch_size, context_length]
+
+model = AutoModelForCausalLM.from_pretrained(
+    'Maple728/TimeMoE-50M',
+    device_map="cpu",  # use "cpu" for CPU inference, "mps" for Apple Silicon and "cuda" for GPU inference.
+    trust_remote_code=True,
+)
+
+# normalize seqs
+mean, std = seqs.mean(dim=-1, keepdim=True), seqs.std(dim=-1, keepdim=True)
+normed_seqs = (seqs - mean) / std
+
+# forecast
+prediction_length = 6
+output = model.generate(normed_seqs, max_new_tokens=prediction_length)  # shape is [batch_size, 12 + 6]
+normed_predictions = output[:, -prediction_length:]  # shape is [batch_size, 6]
+
+# inverse normalize
+predictions = normed_predictions * std + mean
+```
+
+If your sequences are normalized already:
+```python
+
+```
+
+### Evaluation
+
+1. Prepare benchmark datasets.
+
+You can access the well pre-processed datasets from [[Google Drive]](https://drive.google.com/file/d/1NF7VEefXCmXuWNbnNe858WvQAkJ_7wuP/view?usp=sharing), then place the downloaded contents under `./dataset`.
+
+2. Running the follow command to evaluate ETTh1 benchmark.
+
+```shell
+python run_eval.py -d dataset/ETT-small/ETTh1.csv -c 512 -p 96
+```
+

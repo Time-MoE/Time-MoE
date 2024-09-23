@@ -56,7 +56,8 @@ class TimeMoE:
             model_path,
             device_map=device,
             # attn_implementation='flash_attention_2',
-            torch_dtype='auto'
+            torch_dtype='auto',
+            trust_remote_code=True,
         )
         logging.info(f'>>> Model dtype: {model.dtype}; Attention:{model.config._attn_implementation}')
 
@@ -180,7 +181,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--model', '-m',
         type=str,
-        required=True,
+        default='Maple728/TimeMoE-50M',
         help='Model path'
     )
     parser.add_argument(
@@ -198,7 +199,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--context_length', '-c',
         type=int,
-        default=96,
+        default=512,
         help='Context length'
     )
     parser.add_argument(
