@@ -6,10 +6,10 @@ import gzip
 import pickle
 import numpy as np
 
-from .time_moe_dataset import TimeMoEDataset
+from .ts_dataset import TimeSeriesDataset
 
 
-class GeneralDataset(TimeMoEDataset):
+class GeneralDataset(TimeSeriesDataset):
     def __init__(self, data_path):
         self.data = read_file_by_extension(data_path)
 

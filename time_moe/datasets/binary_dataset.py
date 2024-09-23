@@ -4,10 +4,10 @@ import json
 import os
 import numpy as np
 
-from .time_moe_dataset import TimeMoEDataset
+from .ts_dataset import TimeSeriesDataset
 
 
-class BinaryDataset(TimeMoEDataset):
+class BinaryDataset(TimeSeriesDataset):
     meta_file_name = 'meta.json'
     bin_file_name_template = 'data-{}-of-{}.bin'
 
