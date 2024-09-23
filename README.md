@@ -4,30 +4,47 @@
 
 ## Introduction
 
-Time-MoE consists of a family of decoder-only transformer models with a mixture-of-experts architecture, operating in an auto-regressive manner to support any forecasting horizon and accommodate context lengths of up to 4096.
+Time-MoE consists of a family of decoder-only transformer models with a mixture-of-experts architecture, operating in an
+auto-regressive manner to support any forecasting horizon and accommodate context lengths of up to 4096.
 
 <p align="center">
     <img src="figures/time_moe_framework.png" alt="" align=center />
 </p>
 
+Time-MoE models are available in Huggingface:
+
+<div align="center">
+
+| Model                                                                  | Activated Parameters | Parameters                                                             |
+|------------------------------------------------------------------------|----------------------|------------------------------------------------------------------------|
+| [**TimeMoE-50M**](https://huggingface.co/Maple728/TimeMoE-50M)         | 50M                  | 113M                                                                   |
+| [**TimeMoE-200M**](https://huggingface.co/Maple728/TimeMoE-200M)       | 200M                 | 453M                                                                   |
+| [**TimeMoE-1B**](https://huggingface.co/Maple728/TimeMoE-1B)           | 1.1B                 | 2.4B                                                                   |
+
+</div>
+
+[TODO] Release Time-300B.
+
 ## Usage
 
 ### Installation
+
 1. Install Python 3.10+, and then install the dependencies:
+
 ```shell
 pip install -r requirements.txt
 ```
 
 2. [Optional] Install flash-attn. (For faster training and inference)
+
 ```shell
 pip install flash-attn==2.6.3
 ```
 
-### Download Models
-
 ### Forecast
 
 General purpose:
+
 ```python
 import torch
 from transformers import AutoModelForCausalLM
@@ -55,6 +72,7 @@ predictions = normed_predictions * std + mean
 ```
 
 If the sequences are normalized already:
+
 ```python
 import torch
 from transformers import AutoModelForCausalLM
@@ -78,7 +96,9 @@ normed_predictions = output[:, -prediction_length:]  # shape is [batch_size, 6]
 
 1. Prepare benchmark datasets.
 
-You can access the well pre-processed datasets from [[Google Drive]](https://drive.google.com/file/d/1NF7VEefXCmXuWNbnNe858WvQAkJ_7wuP/view?usp=sharing), then place the downloaded contents under `./dataset`.
+You can access the well pre-processed datasets
+from [[Google Drive]](https://drive.google.com/file/d/1NF7VEefXCmXuWNbnNe858WvQAkJ_7wuP/view?usp=sharing), then place
+the downloaded contents under `./dataset`.
 
 2. Running the follow command to evaluate ETTh1 benchmark.
 
@@ -86,3 +106,14 @@ You can access the well pre-processed datasets from [[Google Drive]](https://dri
 python run_eval.py -d dataset/ETT-small/ETTh1.csv -p 96
 ```
 
+## Citation
+
+If you find Time-MoE models useful for your research, please consider citing the associated [paper](xxx):
+
+```
+xxxx
+```
+
+## License
+
+This project is licensed under the Apache-2.0 License.
