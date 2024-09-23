@@ -3,7 +3,13 @@
 </div>
 
 ## Introduction
+
 Time-MoE consists of a family of decoder-only transformer models with a mixture-of-experts architecture, operating in an auto-regressive manner to support any forecasting horizon and accommodate context lengths of up to 4096.
+
+<p align="center">
+    <img src="figures/time_moe_framework.png" alt="" align=center />
+</p>
+
 ## Usage
 
 ### Installation
@@ -31,7 +37,7 @@ seqs = torch.randn(2, context_length)  # tensor shape is [batch_size, context_le
 
 model = AutoModelForCausalLM.from_pretrained(
     'Maple728/TimeMoE-50M',
-    device_map="cpu",  # use "cpu" for CPU inference, "mps" for Apple Silicon and "cuda" for GPU inference.
+    device_map="cpu",  # use "cpu" for CPU inference, and "cuda" for GPU inference.
     trust_remote_code=True,
 )
 
@@ -48,9 +54,24 @@ normed_predictions = output[:, -prediction_length:]  # shape is [batch_size, 6]
 predictions = normed_predictions * std + mean
 ```
 
-If your sequences are normalized already:
+If the sequences are normalized already:
 ```python
+import torch
+from transformers import AutoModelForCausalLM
 
+context_length = 12
+normed_seqs = torch.randn(2, context_length)  # tensor shape is [batch_size, context_length]
+
+model = AutoModelForCausalLM.from_pretrained(
+    'Maple728/TimeMoE-50M',
+    device_map="cpu",  # use "cpu" for CPU inference, and "cuda" for GPU inference.
+    trust_remote_code=True,
+)
+
+# forecast
+prediction_length = 6
+output = model.generate(normed_seqs, max_new_tokens=prediction_length)  # shape is [batch_size, 12 + 6]
+normed_predictions = output[:, -prediction_length:]  # shape is [batch_size, 6]
 ```
 
 ### Evaluation
@@ -62,6 +83,6 @@ You can access the well pre-processed datasets from [[Google Drive]](https://dri
 2. Running the follow command to evaluate ETTh1 benchmark.
 
 ```shell
-python run_eval.py -d dataset/ETT-small/ETTh1.csv -c 512 -p 96
+python run_eval.py -d dataset/ETT-small/ETTh1.csv -p 96
 ```
 
