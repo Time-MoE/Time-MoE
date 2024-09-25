@@ -1,5 +1,5 @@
 <div align="center">
-  <h1><b>Time-MoE: Billion-Scale Time Series Foundation Models with Mixture of Experts </b></h2>
+  <h3><b>Time-MoE: Billion-Scale Time Series Foundation Models with Mixture of Experts </b></h2>
 </div>
 
 <div align="center">
@@ -8,6 +8,12 @@
 ![](https://img.shields.io/github/stars/Time-MoE/Time-MoE?color=yellow)
 ![](https://img.shields.io/github/forks/Time-MoE/Time-MoE?color=lightblue)
 ![](https://img.shields.io/badge/PRs-Welcome-green)
+
+</div>
+
+<div align="center">
+
+**[<a href="https://arxiv.org/pdf/2409.16040">Paper Page</a>]**
 
 </div>
 
@@ -34,31 +40,30 @@
 }
 ```
 
-## 🌟 Updates/News:
+## Updates/News:
 
-🚩 **News** (Sept 2024): Time-MoE-base is now available in [🤗 Hugging Face](https://huggingface.co/Maple728/TimeMoE-50M)! 
+🚩 **News** (Sept 2024): Time-MoE (base) is now available on [🤗 Hugging Face](https://huggingface.co/Maple728/TimeMoE-50M)! 
 
 🚩 **News** (Sept 2024): Time-MoE preprint has been made available on [arXiv](https://arxiv.org/pdf/2409.16040)! 
 
 
 ## Introduction
-
-Time-MoE consists of a family of decoder-only transformer models with a mixture-of-experts architecture, operating in an
-auto-regressive manner to support any forecasting horizon and accommodate context lengths of up to 4096.
+Time-MoE comprises a family of decoder-only time series foundation models with a mixture-of-experts architecture, designed to operate in an auto-regressive manner, enabling universal forecasting with arbitrary prediction horizons and context lengths of up to 4096.
 
 <p align="center">
-    <img src="figures/time_moe_framework.png" alt="" align=center />
+    <img src="figures/time_moe_framework.png" alt="" align="center" width="700px" />
 </p>
+
 
 <div align="center">
   
 ### Time-MoE Model Card
 
-| Model                                            | Activated Parameters | Total Parameters |
+| Model                                            | Activated Params. | Total Params. |
 |--------------------------------------------------|----------------------|------------------|
-| [**TimeMoE-50M**](https://huggingface.co/Maple728/TimeMoE-50M) | 50M                  | 113M             |
-| **TimeMoE-200M**                                 | 200M                 | 453M             |
-| **TimeMoE-1B**                                   | 1.1B                 | 2.4B             |
+| [**Time-MoE (base)**](https://huggingface.co/Maple728/TimeMoE-50M) | 50M                  | 113M             |
+| **Time-MoE (large)**                                 | 200M                 | 453M             |
+| **Time-MoE (ultra)**                                   | 1.1B                 | 2.4B             |
 
 </div>
 
@@ -84,8 +89,6 @@ pip install flash-attn==2.6.3
 ```
 
 ### Making Forecasts
-
-General purpose:
 
 ```python
 import torch
@@ -113,7 +116,7 @@ normed_predictions = output[:, -prediction_length:]  # shape is [batch_size, 6]
 predictions = normed_predictions * std + mean
 ```
 
-If the sequences are normalized already:
++ If the sequences are normalized already:
 
 ```python
 import torch
@@ -136,13 +139,13 @@ normed_predictions = output[:, -prediction_length:]  # shape is [batch_size, 6]
 
 ### Evaluation
 
-1. Prepare benchmark datasets.
++ Prepare the benchmark datasets.
 
 You can access the well pre-processed datasets
 from [[Google Drive]](https://drive.google.com/file/d/1NF7VEefXCmXuWNbnNe858WvQAkJ_7wuP/view?usp=sharing), then place
 the downloaded contents under `./dataset`.
 
-2. Running the follow command to evaluate ETTh1 benchmark.
++ [Example] Running the follow command to evaluate on ETTh1.
 
 ```shell
 python run_eval.py -d dataset/ETT-small/ETTh1.csv -p 96
@@ -150,7 +153,7 @@ python run_eval.py -d dataset/ETT-small/ETTh1.csv -p 96
 
 ## Citation
 
-If you find Time-MoE models useful for your research, please consider citing the associated [paper](https://arxiv.org/pdf/2409.16040):
+If you find the Time-MoE models helpful in your research, please consider citing the corresponding [paper](https://arxiv.org/pdf/2409.16040):
 
 ```
 @misc{shi2024timemoe,
