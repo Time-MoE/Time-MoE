@@ -169,3 +169,11 @@ If you find the Time-MoE models helpful in your research, please consider citing
 ## License
 
 This project is licensed under the Apache-2.0 License.
+
+
+## Acknowledgement
+
+We appreciate the following GitHub repos a lot for their valuable code and efforts.
+- Time-Series-Library (https://github.com/thuml/Time-Series-Library)
+- TimeMixer (https://github.com/kwuking/TimeMixer)
+- Time-LLM (https://github.com/KimMeen/Time-LLM)
