@@ -1,6 +1,45 @@
 <div align="center">
-  <h2><b><img src="figures/timemoe-logo.png" width=25/>Time-MoE: Billion-Scale Time Series Foundation Models with Mixture of Experts </b></h2>
+  <h2><b>Time-MoE: Billion-Scale Time Series Foundation Models with Mixture of Experts </b></h2>
 </div>
+
+<div align="center">
+
+![](https://img.shields.io/github/last-commit/KimMeen/Time-LLM?color=green)
+![](https://img.shields.io/github/stars/KimMeen/Time-LLM?color=yellow)
+![](https://img.shields.io/github/forks/KimMeen/Time-LLM?color=lightblue)
+![](https://img.shields.io/badge/PRs-Welcome-green)
+
+</div>
+
+<p align="center">
+
+<img src="./figures/timemoe-logo.png" width="70">
+
+</p>
+
+---
+>
+> 🙋 Please let us know if you find out a mistake or have any suggestions!
+> 
+> 🌟 If you find this resource helpful, please consider to star this repository and cite our research:
+
+```
+@misc{shi2024timemoe,
+      title={Time-MoE: Billion-Scale Time Series Foundation Models with Mixture of Experts}, 
+      author={Xiaoming Shi and Shiyu Wang and Yuqi Nie and Dianqi Li and Zhou Ye and Qingsong Wen and Ming Jin},
+      year={2024},
+      eprint={2409.16040},
+      archivePrefix={arXiv},
+      url={https://arxiv.org/abs/2409.16040}, 
+}
+```
+
+## 🌟 Updates/News:
+
+🚩 **News** (Sept 2024): Time-MoE-base is now available in [🤗 Hugging Face](https://huggingface.co/Maple728/TimeMoE-50M)! 
+
+🚩 **News** (Sept 2024): Time-MoE preprint has been made available on [arXiv](https://arxiv.org/pdf/2409.16040)! 
+
 
 ## Introduction
 
@@ -11,21 +50,24 @@ auto-regressive manner to support any forecasting horizon and accommodate contex
     <img src="figures/time_moe_framework.png" alt="" align=center />
 </p>
 
-Time-MoE models are available in Huggingface:
+### Time-MoE Model Card
 
 <div align="center">
 
-| Model                                                                  | Activated Parameters | Parameters                                                             |
-|------------------------------------------------------------------------|----------------------|------------------------------------------------------------------------|
-| [**TimeMoE-50M**](https://huggingface.co/Maple728/TimeMoE-50M)         | 50M                  | 113M                                                                   |
-| [**TimeMoE-200M**](https://huggingface.co/Maple728/TimeMoE-200M)       | 200M                 | 453M                                                                   |
-| [**TimeMoE-1B**](https://huggingface.co/Maple728/TimeMoE-1B)           | 1.1B                 | 2.4B                                                                   |
+| Model                                            | Activated Parameters | Total Parameters |
+|--------------------------------------------------|----------------------|------------------|
+| [**TimeMoE-50M**](https://huggingface.co/Maple728/TimeMoE-50M) | 50M                  | 113M             |
+| **TimeMoE-200M**                                 | 200M                 | 453M             |
+| **TimeMoE-1B**                                   | 1.1B                 | 2.4B             |
 
 </div>
 
-[TODO] Release Time-300B.
 
-## Usage
+## 📚 Training Data
+
+Time-300B dataset will be released soon.
+
+## 🚀 Getting Started
 
 ### Installation
 
@@ -41,7 +83,7 @@ pip install -r requirements.txt
 pip install flash-attn==2.6.3
 ```
 
-### Forecast
+### Making Forecasts
 
 General purpose:
 
@@ -108,10 +150,17 @@ python run_eval.py -d dataset/ETT-small/ETTh1.csv -p 96
 
 ## Citation
 
-If you find Time-MoE models useful for your research, please consider citing the associated [paper](xxx):
+If you find Time-MoE models useful for your research, please consider citing the associated [paper](https://arxiv.org/pdf/2409.16040):
 
 ```
-xxxx
+@misc{shi2024timemoe,
+      title={Time-MoE: Billion-Scale Time Series Foundation Models with Mixture of Experts}, 
+      author={Xiaoming Shi and Shiyu Wang and Yuqi Nie and Dianqi Li and Zhou Ye and Qingsong Wen and Ming Jin},
+      year={2024},
+      eprint={2409.16040},
+      archivePrefix={arXiv},
+      url={https://arxiv.org/abs/2409.16040}, 
+}
 ```
 
 ## License
