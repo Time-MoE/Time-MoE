@@ -1,12 +1,12 @@
 <div align="center">
-  <h2><b>Time-MoE: Billion-Scale Time Series Foundation Models with Mixture of Experts </b></h2>
+  <h1><b>Time-MoE: Billion-Scale Time Series Foundation Models with Mixture of Experts </b></h2>
 </div>
 
 <div align="center">
 
-![](https://img.shields.io/github/last-commit/KimMeen/Time-LLM?color=green)
-![](https://img.shields.io/github/stars/KimMeen/Time-LLM?color=yellow)
-![](https://img.shields.io/github/forks/KimMeen/Time-LLM?color=lightblue)
+![](https://img.shields.io/github/last-commit/Time-MoE/Time-MoE?color=green)
+![](https://img.shields.io/github/stars/Time-MoE/Time-MoE?color=yellow)
+![](https://img.shields.io/github/forks/Time-MoE/Time-MoE?color=lightblue)
 ![](https://img.shields.io/badge/PRs-Welcome-green)
 
 </div>
@@ -50,9 +50,9 @@ auto-regressive manner to support any forecasting horizon and accommodate contex
     <img src="figures/time_moe_framework.png" alt="" align=center />
 </p>
 
-### Time-MoE Model Card
-
 <div align="center">
+  
+### Time-MoE Model Card
 
 | Model                                            | Activated Parameters | Total Parameters |
 |--------------------------------------------------|----------------------|------------------|
