@@ -177,10 +177,10 @@ If you find the Time-MoE models helpful in your research, please consider citing
 ## Acknowledgement
 
 We appreciate the following GitHub repos a lot for their valuable code and efforts.
-- Time-LLM (https://github.com/KimMeen/Time-LLM)
-- TimeMixer (https://github.com/kwuking/TimeMixer)
-- Time-Series-Library (https://github.com/thuml/Time-Series-Library)
-- Large (Language) Models and Foundation Models (LLM, LM, FM) for Time Series and Spatio-Temporal Data (https://github.com/qingsongedu/Awesome-TimeSeries-SpatioTemporal-LM-LLM)
+- Time-LLM [\[repo\]](https://github.com/KimMeen/Time-LLM)
+- TimeMixer [\[repo\]](https://github.com/kwuking/TimeMixer)
+- Time-Series-Library [\[repo\]](https://github.com/thuml/Time-Series-Library)
+- Large (Language) Models and Foundation Models (LLM, LM, FM) for Time Series and Spatio-Temporal Data [\[repo\]](https://github.com/qingsongedu/Awesome-TimeSeries-SpatioTemporal-LM-LLM)
 
   
 ## License
