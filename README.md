@@ -26,7 +26,7 @@
 ---
 >
 > 🙋 Please let us know if you find out a mistake or have any suggestions!
-> 
+>
 > 🌟 If you find this resource helpful, please consider to star this repository and cite our research:
 
 ```
@@ -42,13 +42,16 @@
 
 ## Updates/News:
 
-🚩 **News** (Sept 2024): Time-MoE (base) is now available on [🤗 Hugging Face](https://huggingface.co/Maple728/TimeMoE-50M)! 
+🚩 **News** (Sept 2024): Time-MoE (base) is now available
+on [🤗 Hugging Face](https://huggingface.co/Maple728/TimeMoE-50M)!
 
-🚩 **News** (Sept 2024): Time-MoE preprint has been made available on [arXiv](https://arxiv.org/pdf/2409.16040)! 
-
+🚩 **News** (Sept 2024): Time-MoE preprint has been made available on [arXiv](https://arxiv.org/pdf/2409.16040)!
 
 ## Introduction
-Time-MoE comprises a family of decoder-only time series foundation models with a mixture-of-experts architecture, designed to operate in an auto-regressive manner, enabling universal forecasting with arbitrary prediction horizons and context lengths of up to 4096.
+
+Time-MoE comprises a family of decoder-only time series foundation models with a mixture-of-experts architecture,
+designed to operate in an auto-regressive manner, enabling universal forecasting with arbitrary prediction horizons and
+context lengths of up to 4096.
 
 <p align="center">
     <img src="figures/time_moe_framework.png" alt="" align="center" width="700px" />
@@ -56,17 +59,16 @@ Time-MoE comprises a family of decoder-only time series foundation models with a
 
 
 <div align="center">
-  
+
 ### Time-MoE Model Card
 
-| Model                                            | Activated Params. | Total Params. |
-|--------------------------------------------------|----------------------|------------------|
-| [**Time-MoE (base)**](https://huggingface.co/Maple728/TimeMoE-50M) | 50M                  | 113M             |
-| **Time-MoE (large)**                                 | 200M                 | 453M             |
-| **Time-MoE (ultra)**                                   | 1.1B                 | 2.4B             |
+| Model                                                              | Activated Params. | Total Params. |
+|--------------------------------------------------------------------|-------------------|---------------|
+| [**Time-MoE (base)**](https://huggingface.co/Maple728/TimeMoE-50M) | 50M               | 113M          |
+| **Time-MoE (large)**                                               | 200M              | 453M          |
+| **Time-MoE (ultra)**                                               | 1.1B              | 2.4B          |
 
 </div>
-
 
 ## 📚 Training Data
 
@@ -81,6 +83,7 @@ Time-300B dataset will be released soon.
 ```shell
 pip install -r requirements.txt
 ```
+**Time-MoE requires `transformers==4.40.1` .**
 
 2. [Optional] Install flash-attn. (For faster training and inference)
 
@@ -153,7 +156,8 @@ python run_eval.py -d dataset/ETT-small/ETTh1.csv -p 96
 
 ## Citation
 
-If you find the Time-MoE models helpful in your research, please consider citing the corresponding [paper](https://arxiv.org/pdf/2409.16040):
+If you find the Time-MoE models helpful in your research, please consider citing the
+corresponding [paper](https://arxiv.org/pdf/2409.16040):
 
 ```
 @misc{shi2024timemoe,
@@ -177,12 +181,12 @@ If you find the Time-MoE models helpful in your research, please consider citing
 ## Acknowledgement
 
 We appreciate the following GitHub repos a lot for their valuable code and efforts.
+
 - Time-LLM [\[repo\]](https://github.com/KimMeen/Time-LLM)
 - TimeMixer [\[repo\]](https://github.com/kwuking/TimeMixer)
 - Time-Series-Library [\[repo\]](https://github.com/thuml/Time-Series-Library)
 - Large (Language) Models and Foundation Models (LLM, LM, FM) for Time Series and Spatio-Temporal Data [\[repo\]](https://github.com/qingsongedu/Awesome-TimeSeries-SpatioTemporal-LM-LLM)
 
-  
 ## License
 
 This project is licensed under the Apache-2.0 License.
