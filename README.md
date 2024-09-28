@@ -166,14 +166,23 @@ If you find the Time-MoE models helpful in your research, please consider citing
 }
 ```
 
-## License
+## Related Resources
 
-This project is licensed under the Apache-2.0 License.
-
+* Foundation Models for Time Series Analysis: A Tutorial and Survey, in *KDD* 2024. [\[paper\]](https://arxiv.org/abs/2403.14735) [\[Tutorial\]](https://wenhaomin.github.io/FM4TS.github.io/)
+* What Can Large Language Models Tell Us about Time Series Analysis, in *ICML* 2024. [\[paper\]](https://arxiv.org/abs/2402.02713)
+* Self-Supervised Learning for Time Series Analysis: Taxonomy, Progress, and Prospects, in *TPAMI* 2024. [\[paper\]](https://arxiv.org/abs/2306.10125) [\[Website\]](https://github.com/qingsongedu/Awesome-SSL4TS)
+* A Survey on Graph Neural Networks for Time Series: Forecasting, Classification, Imputation, and Anomaly Detection, in *TPAMI* 2024. [\[paper\]](https://arxiv.org/abs/2307.03759) [\[Website\]](https://github.com/KimMeen/Awesome-GNN4TS)
+* Transformers in Time Series: A Survey, in *IJCAI* 2023. [\[paper\]](https://arxiv.org/abs/2202.07125) [\[GitHub Repo\]](https://github.com/qingsongedu/time-series-transformers-review)
 
 ## Acknowledgement
 
 We appreciate the following GitHub repos a lot for their valuable code and efforts.
-- Time-Series-Library (https://github.com/thuml/Time-Series-Library)
-- TimeMixer (https://github.com/kwuking/TimeMixer)
 - Time-LLM (https://github.com/KimMeen/Time-LLM)
+- TimeMixer (https://github.com/kwuking/TimeMixer)
+- Time-Series-Library (https://github.com/thuml/Time-Series-Library)
+- Large (Language) Models and Foundation Models (LLM, LM, FM) for Time Series and Spatio-Temporal Data (https://github.com/qingsongedu/Awesome-TimeSeries-SpatioTemporal-LM-LLM)
+
+  
+## License
+
+This project is licensed under the Apache-2.0 License.
