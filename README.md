@@ -24,21 +24,10 @@
 </p>
 
 ---
->
-> 🙋 Please let us know if you find out a mistake or have any suggestions!
->
-> 🌟 If you find this resource helpful, please consider to star this repository and cite our research:
-
-```
-@misc{shi2024timemoe,
-      title={Time-MoE: Billion-Scale Time Series Foundation Models with Mixture of Experts}, 
-      author={Xiaoming Shi and Shiyu Wang and Yuqi Nie and Dianqi Li and Zhou Ye and Qingsong Wen and Ming Jin},
-      year={2024},
-      eprint={2409.16040},
-      archivePrefix={arXiv},
-      url={https://arxiv.org/abs/2409.16040}, 
-}
-```
+> Time-MoE (Model): **the first work to scale time series foundation models up to 2.4 billion parameters** (trained from scratch)
+> 
+> Time-300B (Dataset): **the largest open-access time series data collection** (comprising over 300 billion time points spanning more than 9 domains)
+---
 
 ## Updates/News:
 
@@ -156,7 +145,9 @@ python run_eval.py -d dataset/ETT-small/ETTh1.csv -p 96
 
 ## Citation
 
-If you find the Time-MoE models helpful in your research, please consider citing the
+> 🙋 Please let us know if you find out a mistake or have any suggestions!
+
+> 🌟 If you find the Time-MoE models helpful in your research, please consider to star this repository and cite the
 corresponding [paper](https://arxiv.org/pdf/2409.16040):
 
 ```
