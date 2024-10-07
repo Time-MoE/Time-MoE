@@ -26,7 +26,7 @@
 ---
 > Time-MoE (Model): **the first work to scale time series foundation models up to 2.4 billion parameters** (trained from scratch)
 > 
-> Time-300B (Dataset): **the largest open-access time series data collection** (comprising over 300 billion time points spanning more than 9 domains)
+> Time-300B (Dataset): **the largest open-access time series data collection comprising over 300 billion time points** (spanning more than 9 domains)
 ---
 
 ## Updates/News:
