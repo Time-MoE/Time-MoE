@@ -95,6 +95,9 @@ model = AutoModelForCausalLM.from_pretrained(
     trust_remote_code=True,
 )
 
+# use it when the flash-attn is available
+# model = AutoModelForCausalLM.from_pretrained('Maple728/TimeMoE-50M', device_map="auto", attn_implementation='flash_attention_2', trust_remote_code=True)
+
 # normalize seqs
 mean, std = seqs.mean(dim=-1, keepdim=True), seqs.std(dim=-1, keepdim=True)
 normed_seqs = (seqs - mean) / std
@@ -122,6 +125,9 @@ model = AutoModelForCausalLM.from_pretrained(
     device_map="cpu",  # use "cpu" for CPU inference, and "cuda" for GPU inference.
     trust_remote_code=True,
 )
+
+# use it when the flash-attn is available
+# model = AutoModelForCausalLM.from_pretrained('Maple728/TimeMoE-50M', device_map="auto", attn_implementation='flash_attention_2', trust_remote_code=True)
 
 # forecast
 prediction_length = 6
