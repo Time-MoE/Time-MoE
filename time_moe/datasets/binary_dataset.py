@@ -87,7 +87,10 @@ class BinaryDataset(TimeSeriesDataset):
 
     @staticmethod
     def is_valid_path(data_path):
-        if os.path.exists(data_path) and os.path.exists(os.path.join(data_path, 'meta.json')):
+        if (os.path.exists(data_path)
+                and os.path.isdir(data_path)
+                and os.path.exists(os.path.join(data_path, 'meta.json'))
+        ):
             for sub in os.listdir(data_path):
                 # TODO check if lack bin file
                 if os.path.isfile(os.path.join(data_path, sub)) and '.bin' in sub:

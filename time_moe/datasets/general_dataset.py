@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 _*-
 import json
+import os
+
 import yaml
 import gzip
 import pickle
@@ -22,6 +24,19 @@ class GeneralDataset(TimeSeriesDataset):
     def get_sequence_length_by_idx(self, seq_idx):
         return len(self.data[seq_idx])
 
+    @staticmethod
+    def is_valid_path(data_path):
+        if os.path.exists(data_path) and os.path.isfile(data_path):
+            parts = data_path.split('.')
+            if len(parts) == 0:
+                return False
+            suffix = parts[-1]
+            if suffix in ('json', 'jsonl', 'npy', 'npy.gz', 'pkl'):
+                return True
+            else:
+                return False
+        else:
+            return False
 
 def read_file_by_extension(fn):
     if fn.endswith('.json'):
