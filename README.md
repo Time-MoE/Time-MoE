@@ -24,12 +24,20 @@
 </p>
 
 ---
-> Time-MoE (Model): **the first work to scale time series foundation models up to 2.4 billion parameters** (trained from scratch)
-> 
-> Time-300B (Dataset): **the largest open-access time series data collection comprising over 300 billion time points** (spanning more than 9 domains)
+> Time-MoE (Model): **the first work to scale time series foundation models up to 2.4 billion parameters** (trained from
+> scratch)
+>
+> Time-300B (Dataset): **the largest open-access time series data collection comprising over 300 billion time points** (
+> spanning more than 9 domains)
 ---
 
 ## Updates/News:
+
+🚩 **News** (Oct 2024): Time-300B dataset is now available 
+on [🤗 Hugging Face](https://huggingface.co/datasets/Maple728/Time-300B)!
+
+🚩 **News** (Oct 2024): Time-MoE (large) is now available
+on [🤗 Hugging Face](https://huggingface.co/Maple728/TimeMoE-200M)!
 
 🚩 **News** (Sept 2024): Time-MoE (base) is now available
 on [🤗 Hugging Face](https://huggingface.co/Maple728/TimeMoE-50M)!
@@ -51,17 +59,29 @@ context lengths of up to 4096.
 
 ### Time-MoE Model Card
 
-| Model                                                              | Activated Params. | Total Params. |
-|--------------------------------------------------------------------|-------------------|---------------|
-| [**Time-MoE (base)**](https://huggingface.co/Maple728/TimeMoE-50M) | 50M               | 113M          |
-| **Time-MoE (large)**                                               | 200M              | 453M          |
-| **Time-MoE (ultra)**                                               | 1.1B              | 2.4B          |
+| Model                                                                | Activated Params. | Total Params. |
+|----------------------------------------------------------------------|-------------------|---------------|
+| [**Time-MoE (base)**](https://huggingface.co/Maple728/TimeMoE-50M)   | 50M               | 113M          |
+| [**Time-MoE (large)**](https://huggingface.co/Maple728/TimeMoE-200M) | 200M              | 453M          |
+| **Time-MoE (ultra)**                                                 | 1.1B              | 2.4B          |
 
 </div>
 
 ## 📚 Training Data
 
-Time-300B dataset will be released soon.
+Time-300B dataset is available on [🤗 Hugging Face](https://huggingface.co/datasets/Maple728/Time-300B)!
+
+Here's an example of how to use this dataset:
+```python
+import random
+from time_moe.datasets.time_moe_dataset import TimeMoEDataset
+
+ds = TimeMoEDataset('Time-300B')
+seq_idx = random.randint(0, len(ds) - 1)
+seq = ds[seq_idx]
+```
+
+This code snippet shows how to load a random data sequence from the Time-300B dataset. First, download the dataset to the local 'Time-300B' folder, import the TimeMoEDataset class from time_moe.datasets, instantiate the class, and finally retrieve a sequence using a random index.
 
 ## 🚀 Getting Started
 
@@ -72,9 +92,10 @@ Time-300B dataset will be released soon.
 ```shell
 pip install -r requirements.txt
 ```
+
 **Time-MoE requires `transformers==4.40.1` .**
 
-2. [Optional] Install flash-attn. (For faster training and inference)
+2. [Optional but **recommended**] Install [flash-attn](https://github.com/Dao-AILab/flash-attention) for faster training and inference speeds with reduced memory usage.
 
 ```shell
 pip install flash-attn==2.6.3
@@ -154,7 +175,7 @@ python run_eval.py -d dataset/ETT-small/ETTh1.csv -p 96
 > 🙋 Please let us know if you find out a mistake or have any suggestions!
 
 > 🌟 If you find the Time-MoE models helpful in your research, please consider to star this repository and cite the
-corresponding [paper](https://arxiv.org/pdf/2409.16040):
+> corresponding [paper](https://arxiv.org/pdf/2409.16040):
 
 ```
 @misc{shi2024timemoe,
@@ -169,11 +190,16 @@ corresponding [paper](https://arxiv.org/pdf/2409.16040):
 
 ## Related Resources
 
-* Foundation Models for Time Series Analysis: A Tutorial and Survey, in *KDD* 2024. [\[paper\]](https://arxiv.org/abs/2403.14735) [\[Tutorial\]](https://wenhaomin.github.io/FM4TS.github.io/)
-* What Can Large Language Models Tell Us about Time Series Analysis, in *ICML* 2024. [\[paper\]](https://arxiv.org/abs/2402.02713)
-* Self-Supervised Learning for Time Series Analysis: Taxonomy, Progress, and Prospects, in *TPAMI* 2024. [\[paper\]](https://arxiv.org/abs/2306.10125) [\[Website\]](https://github.com/qingsongedu/Awesome-SSL4TS)
-* A Survey on Graph Neural Networks for Time Series: Forecasting, Classification, Imputation, and Anomaly Detection, in *TPAMI* 2024. [\[paper\]](https://arxiv.org/abs/2307.03759) [\[Website\]](https://github.com/KimMeen/Awesome-GNN4TS)
-* Transformers in Time Series: A Survey, in *IJCAI* 2023. [\[paper\]](https://arxiv.org/abs/2202.07125) [\[GitHub Repo\]](https://github.com/qingsongedu/time-series-transformers-review)
+* Foundation Models for Time Series Analysis: A Tutorial and Survey, in *KDD*
+  2024. [\[paper\]](https://arxiv.org/abs/2403.14735) [\[Tutorial\]](https://wenhaomin.github.io/FM4TS.github.io/)
+* What Can Large Language Models Tell Us about Time Series Analysis, in *ICML*
+  2024. [\[paper\]](https://arxiv.org/abs/2402.02713)
+* Self-Supervised Learning for Time Series Analysis: Taxonomy, Progress, and Prospects, in *TPAMI*
+  2024. [\[paper\]](https://arxiv.org/abs/2306.10125) [\[Website\]](https://github.com/qingsongedu/Awesome-SSL4TS)
+* A Survey on Graph Neural Networks for Time Series: Forecasting, Classification, Imputation, and Anomaly Detection, in
+  *TPAMI* 2024. [\[paper\]](https://arxiv.org/abs/2307.03759) [\[Website\]](https://github.com/KimMeen/Awesome-GNN4TS)
+* Transformers in Time Series: A Survey, in *IJCAI*
+  2023. [\[paper\]](https://arxiv.org/abs/2202.07125) [\[GitHub Repo\]](https://github.com/qingsongedu/time-series-transformers-review)
 
 ## Acknowledgement
 
@@ -182,7 +208,8 @@ We appreciate the following GitHub repos a lot for their valuable code and effor
 - Time-LLM [\[repo\]](https://github.com/KimMeen/Time-LLM)
 - TimeMixer [\[repo\]](https://github.com/kwuking/TimeMixer)
 - Time-Series-Library [\[repo\]](https://github.com/thuml/Time-Series-Library)
-- Large (Language) Models and Foundation Models (LLM, LM, FM) for Time Series and Spatio-Temporal Data [\[repo\]](https://github.com/qingsongedu/Awesome-TimeSeries-SpatioTemporal-LM-LLM)
+- Large (Language) Models and Foundation Models (LLM, LM, FM) for Time Series and Spatio-Temporal
+  Data [\[repo\]](https://github.com/qingsongedu/Awesome-TimeSeries-SpatioTemporal-LM-LLM)
 
 ## License
 

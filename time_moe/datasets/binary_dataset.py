@@ -28,7 +28,7 @@ class BinaryDataset(TimeSeriesDataset):
         # process the start index for each file
         self.file_start_idxes = []
         s_idx = 0
-        for fn, length in sorted(self.meta_info['files'].items(), key=lambda x: x[0]):
+        for fn, length in sorted(self.meta_info['files'].items(), key=lambda x: int(x[0].split('-')[1])):
             self.file_start_idxes.append(
                 (os.path.join(data_path, fn), s_idx, length)
             )
@@ -93,7 +93,7 @@ class BinaryDataset(TimeSeriesDataset):
         ):
             for sub in os.listdir(data_path):
                 # TODO check if lack bin file
-                if os.path.isfile(os.path.join(data_path, sub)) and '.bin' in sub:
+                if os.path.isfile(os.path.join(data_path, sub)) and sub.endswith('.bin'):
                     return True
         return False
 
