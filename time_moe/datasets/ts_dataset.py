@@ -15,3 +15,8 @@ class TimeSeriesDataset:
     @abstractmethod
     def get_sequence_length_by_idx(self, seq_idx):
         pass
+
+    @staticmethod
+    @abstractmethod
+    def is_valid_path(data_path):
+        pass
