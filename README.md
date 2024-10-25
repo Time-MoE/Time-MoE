@@ -15,6 +15,8 @@
 
 **[<a href="https://arxiv.org/pdf/2409.16040">Paper Page</a>]**
 
+**[<a href="https://mp.weixin.qq.com/s/LaYn0IJAOlN9Ufp_qus96Q">中文解读</a>]**
+
 </div>
 
 <p align="center">
@@ -32,6 +34,8 @@
 ---
 
 ## Updates/News:
+
+🚩 **News** (Oct 2024): Time-MoE introduction in [Chinese](https://mp.weixin.qq.com/s/LaYn0IJAOlN9Ufp_qus96Q) is now available!
 
 🚩 **News** (Oct 2024): Time-300B dataset is now available 
 on [🤗 Hugging Face](https://huggingface.co/datasets/Maple728/Time-300B)!
