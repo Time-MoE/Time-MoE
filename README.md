@@ -14,7 +14,6 @@
 <div align="center">
 
 **[<a href="https://arxiv.org/pdf/2409.16040">Paper Page</a>]**
-
 **[<a href="https://mp.weixin.qq.com/s/LaYn0IJAOlN9Ufp_qus96Q">中文解读</a>]**
 
 </div>
@@ -25,13 +24,11 @@
 
 </p>
 
----
-> Time-MoE (Model): **the first work to scale time series foundation models up to 2.4 billion parameters** (trained from
-> scratch)
->
-> Time-300B (Dataset): **the largest open-access time series data collection comprising over 300 billion time points** (
-> spanning more than 9 domains)
----
+
+> 1️⃣ Time-MoE is **the first work to scale time series foundation models up to 2.4 billion parameters**, trained from
+> scratch.
+
+> 2️⃣ Time-300B is **the largest open-access time series data collection** comprising over 300 billion time points across more than 9 domains.
 
 ## Updates/News:
 
@@ -61,7 +58,7 @@ context lengths of up to 4096.
 
 <div align="center">
 
-### Time-MoE Model Card
+### 🗂️ Time-MoE Model Card
 
 | Model                                                                | Activated Params. | Total Params. |
 |----------------------------------------------------------------------|-------------------|---------------|
@@ -97,7 +94,7 @@ This code snippet shows how to load a random data sequence from the Time-300B da
 pip install -r requirements.txt
 ```
 
-**Time-MoE requires `transformers==4.40.1` .**
+**Note: Time-MoE requires `transformers==4.40.1` .**
 
 2. [Optional but **recommended**] Install [flash-attn](https://github.com/Dao-AILab/flash-attention) for faster training and inference speeds with reduced memory usage.
 
@@ -193,7 +190,6 @@ python run_eval.py -d dataset/ETT-small/ETTh1.csv -p 96
 ```
 
 ## Related Resources
-
 * Foundation Models for Time Series Analysis: A Tutorial and Survey, in *KDD*
   2024. [\[paper\]](https://arxiv.org/abs/2403.14735) [\[Tutorial\]](https://wenhaomin.github.io/FM4TS.github.io/)
 * What Can Large Language Models Tell Us about Time Series Analysis, in *ICML*
@@ -204,6 +200,7 @@ python run_eval.py -d dataset/ETT-small/ETTh1.csv -p 96
   *TPAMI* 2024. [\[paper\]](https://arxiv.org/abs/2307.03759) [\[Website\]](https://github.com/KimMeen/Awesome-GNN4TS)
 * Transformers in Time Series: A Survey, in *IJCAI*
   2023. [\[paper\]](https://arxiv.org/abs/2202.07125) [\[GitHub Repo\]](https://github.com/qingsongedu/time-series-transformers-review)
+* Towards Neural Scaling Laws for Time Series Foundation Models, arXiv 2024. [\[paper\]](https://arxiv.org/pdf/2410.12360)
 
 ## Acknowledgement
 
