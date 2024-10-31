@@ -201,6 +201,8 @@ python run_eval.py -d dataset/ETT-small/ETTh1.csv -p 96
 * Transformers in Time Series: A Survey, in *IJCAI*
   2023. [\[paper\]](https://arxiv.org/abs/2202.07125) [\[GitHub Repo\]](https://github.com/qingsongedu/time-series-transformers-review)
 * Towards Neural Scaling Laws for Time Series Foundation Models, arXiv 2024. [\[paper\]](https://arxiv.org/pdf/2410.12360)
+* TimeMixer++: A General Time Series Pattern Machine for Universal Predictive Analysis, arXiv 2024. [\[paper\]](https://arxiv.org/abs/2410.16032) [\[GitHub Repo\]](https://github.com/kwuking/TimeMixer)
+
 
 ## Acknowledgement
 
