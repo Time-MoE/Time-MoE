@@ -55,12 +55,11 @@ class BinaryDataset(TimeSeriesDataset):
         else:
             return sequence
 
-    def get_sequence_length_by_idx(self, seq_idx):
-        return self.meta_info[seq_idx]['length']
+    def get_num_tokens(self):
+        return self.num_tokens
 
-    def __iter__(self):
-        for i in range(len(self)):
-            yield self[i]
+    def get_sequence_length_by_idx(self, seq_idx):
+        return self.seq_infos[seq_idx]['length']
 
     def _get_read_infos_by_offset_length(self, offset, length):
         # just use naive search

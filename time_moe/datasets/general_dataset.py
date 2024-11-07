@@ -12,14 +12,21 @@ from .ts_dataset import TimeSeriesDataset
 
 
 class GeneralDataset(TimeSeriesDataset):
+
     def __init__(self, data_path):
         self.data = read_file_by_extension(data_path)
+        self.num_tokens = None
 
     def __len__(self):
         return len(self.data)
 
     def __getitem__(self, seq_idx):
         return self.data[seq_idx]
+
+    def get_num_tokens(self):
+        if self.num_tokens is None:
+            self.num_tokens = sum([len(seq) for seq in self.data])
+        return self.num_tokens
 
     def get_sequence_length_by_idx(self, seq_idx):
         return len(self.data[seq_idx])
@@ -37,6 +44,7 @@ class GeneralDataset(TimeSeriesDataset):
                 return False
         else:
             return False
+
 
 def read_file_by_extension(fn):
     if fn.endswith('.json'):
