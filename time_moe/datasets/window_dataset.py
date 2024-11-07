@@ -1,12 +1,14 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 _*-
 import numpy as np
+import random
 
 from time_moe.datasets.ts_dataset import TimeSeriesDataset
 
 
 class WindowDataset:
-    def __init__(self, dataset: TimeSeriesDataset, context_length: int, prediction_length: int = 0):
+    def __init__(self, dataset: TimeSeriesDataset, context_length: int, prediction_length: int = 0,
+                 shuffle: bool = False):
         self.dataset = dataset
         self.context_length = context_length
         self.prediction_length = prediction_length
@@ -17,7 +19,13 @@ class WindowDataset:
 
         cur_window_info = []
         num_cur_remaining_points = self.window_size
-        for seq_idx in range(n_seqs):
+
+        iterator = range(n_seqs)
+        if shuffle:
+            iterator = list(iterator)
+            random.shuffle(iterator)
+
+        for seq_idx in iterator:
             seq_len = self.dataset.get_sequence_length_by_idx(seq_idx)
             remaining_seq_len = seq_len
             while remaining_seq_len > 0:
@@ -58,18 +66,5 @@ class WindowDataset:
             seq.append(part_seq)
         if len(seq) == 1:
             return seq[0]
-        seq = np.concatenate([seq], axis=0)
+        seq = np.concatenate(seq, axis=0)
         return seq
-
-
-if __name__ == '__main__':
-    folder = '/Users/shixiaoming/codes/Time-MoE/tmp_time_moe_dataset/time_300b'
-    from time_moe.datasets.time_moe_dataset import TimeMoEDataset
-    dataset = TimeMoEDataset(folder, normalization_method=None)
-
-    window_dataset = WindowDataset(dataset, context_length=4096, prediction_length=0)
-
-    print(len(dataset))
-
-    for i in range(len(window_dataset)):
-        seq = window_dataset[i]

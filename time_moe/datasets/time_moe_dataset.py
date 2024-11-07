@@ -96,25 +96,28 @@ class TimeMoEDataset(TimeSeriesDataset):
 def zero_scaler(seq):
     if not isinstance(seq, np.ndarray):
         seq = np.array(seq)
-    std_val = seq.std()
+    origin_dtype = seq.dtype
+    std_val = seq.std(dtype=np.float64)
     if std_val == 0:
         normed_seq = seq
     else:
-        normed_seq = (seq - seq.mean()) / std_val
+        mean_val = seq.mean(dtype=np.float64)
+        normed_seq = (seq - mean_val) / std_val
 
-    return normed_seq
+    return normed_seq.astype(origin_dtype)
 
 
 def max_scaler(seq):
     if not isinstance(seq, np.ndarray):
         seq = np.array(seq)
-    max_val = np.abs(seq).max()
+    origin_dtype = seq.dtype
+    max_val = np.abs(seq).max(dtype=np.float64)
     if max_val == 0:
         normed_seq = seq
     else:
         normed_seq = seq / max_val
 
-    return normed_seq
+    return normed_seq.astype(origin_dtype)
 
 
 def binary_search(sorted_list, value):
