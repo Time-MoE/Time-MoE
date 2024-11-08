@@ -9,7 +9,7 @@ import torch
 import torch.distributed as dist
 
 from time_moe.datasets.time_moe_dataset import TimeMoEDataset
-from time_moe.datasets.window_dataset import WindowDataset
+from time_moe.datasets.time_moe_window_dataset import TimeMoEWindowDataset
 from time_moe.models.modeling_time_moe import TimeMoeForPrediction
 from time_moe.trainer.hf_trainer import TimeMoETrainingArguments, TimeMoeTrainer
 from time_moe.utils.dist_util import get_world_size
@@ -86,6 +86,8 @@ class TimeMoeRunner:
         log_in_local_rank_0(f'Set global_batch_size to {global_batch_size}')
         log_in_local_rank_0(f'Set micro_batch_size to {micro_batch_size}')
         log_in_local_rank_0(f'Set gradient_accumulation_steps to {gradient_accumulation_steps}')
+        log_in_local_rank_0(f'Set precision to {precision}')
+        log_in_local_rank_0(f'Set normalization to {train_config["normalization_method"]}')
 
         training_args = TimeMoETrainingArguments(
             output_dir=self.output_path,
@@ -171,7 +173,7 @@ class TimeMoeRunner:
         log_in_local_rank_0('Loading dataset...')
         dataset = TimeMoEDataset(data_path, normalization_method=normalization_method)
         log_in_local_rank_0('Processing dataset to fixed-size sub-sequences...')
-        window_dataset = WindowDataset(dataset, context_length=max_length, prediction_length=0, shuffle=False)
+        window_dataset = TimeMoEWindowDataset(dataset, context_length=max_length, prediction_length=0, shuffle=False)
         return window_dataset
 
 
