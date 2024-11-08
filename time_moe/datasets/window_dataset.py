@@ -25,6 +25,12 @@ class WindowDataset:
             iterator = list(iterator)
             random.shuffle(iterator)
 
+        try:
+            from tqdm import tqdm
+            iterator = tqdm(iterator, total=n_seqs)
+        except:
+            pass
+
         for seq_idx in iterator:
             seq_len = self.dataset.get_sequence_length_by_idx(seq_idx)
             remaining_seq_len = seq_len
@@ -65,6 +71,11 @@ class WindowDataset:
             part_seq = self.dataset[seq_idx][start_idx_in_seq: start_idx_in_seq + offset]
             seq.append(part_seq)
         if len(seq) == 1:
-            return seq[0]
-        seq = np.concatenate(seq, axis=0)
-        return seq
+            seq = seq[0]
+        else:
+            seq = np.concatenate(seq, axis=0)
+        seq = seq.astype(np.float32)
+        return {
+            'input_ids': seq[:-1],
+            'labels': seq[1:],
+        }

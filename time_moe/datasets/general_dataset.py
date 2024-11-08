@@ -21,7 +21,10 @@ class GeneralDataset(TimeSeriesDataset):
         return len(self.data)
 
     def __getitem__(self, seq_idx):
-        return self.data[seq_idx]
+        seq = self.data[seq_idx]
+        if isinstance(seq, dict):
+            seq = seq['sequence']
+        return seq
 
     def get_num_tokens(self):
         if self.num_tokens is None:
@@ -29,7 +32,8 @@ class GeneralDataset(TimeSeriesDataset):
         return self.num_tokens
 
     def get_sequence_length_by_idx(self, seq_idx):
-        return len(self.data[seq_idx])
+        seq = self[seq_idx]
+        return len(seq)
 
     @staticmethod
     def is_valid_path(data_path):

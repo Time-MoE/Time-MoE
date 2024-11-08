@@ -19,7 +19,11 @@ class BinaryDataset(TimeSeriesDataset):
 
         # load meta file
         meta_file_path = os.path.join(data_path, self.meta_file_name)
-        self.meta_info = load_json_file(meta_file_path)
+        try:
+            self.meta_info = load_json_file(meta_file_path)
+        except Exception as e:
+            print(f'Error when loading file {meta_file_path}: {e}')
+            raise e
 
         self.num_sequences = self.meta_info['num_sequences']
         self.dtype = self.meta_info['dtype']
