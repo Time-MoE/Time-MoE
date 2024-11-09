@@ -13,10 +13,18 @@ class TimeSeriesDataset:
         pass
 
     @abstractmethod
+    def get_num_tokens(self):
+        pass
+
+    @abstractmethod
     def get_sequence_length_by_idx(self, seq_idx):
         pass
 
     @staticmethod
-    @abstractmethod
     def is_valid_path(data_path):
-        pass
+        return True
+
+    def __iter__(self):
+        n_seqs = len(self)
+        for i in range(n_seqs):
+            yield self[i]

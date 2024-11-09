@@ -2,10 +2,9 @@
 # -*- coding:utf-8 _*-
 import json
 import os
-
-import yaml
-import gzip
 import pickle
+import gzip
+import yaml
 import numpy as np
 
 from .ts_dataset import TimeSeriesDataset
@@ -14,15 +13,25 @@ from .ts_dataset import TimeSeriesDataset
 class GeneralDataset(TimeSeriesDataset):
     def __init__(self, data_path):
         self.data = read_file_by_extension(data_path)
+        self.num_tokens = None
 
     def __len__(self):
         return len(self.data)
 
     def __getitem__(self, seq_idx):
-        return self.data[seq_idx]
+        seq = self.data[seq_idx]
+        if isinstance(seq, dict):
+            seq = seq['sequence']
+        return seq
+
+    def get_num_tokens(self):
+        if self.num_tokens is None:
+            self.num_tokens = sum([len(seq) for seq in self.data])
+        return self.num_tokens
 
     def get_sequence_length_by_idx(self, seq_idx):
-        return len(self.data[seq_idx])
+        seq = self[seq_idx]
+        return len(seq)
 
     @staticmethod
     def is_valid_path(data_path):
@@ -37,6 +46,7 @@ class GeneralDataset(TimeSeriesDataset):
                 return False
         else:
             return False
+
 
 def read_file_by_extension(fn):
     if fn.endswith('.json'):

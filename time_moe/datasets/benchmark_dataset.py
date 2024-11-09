@@ -6,6 +6,8 @@ import pandas as pd
 from torch.utils.data import Dataset
 from sklearn.preprocessing import StandardScaler
 
+from time_moe.utils.log_util import log_in_local_rank_0
+
 
 class BenchmarkEvalDataset(Dataset):
 
@@ -33,8 +35,8 @@ class BenchmarkEvalDataset(Dataset):
         start_dt = df.iloc[border1s[2]]['date']
         eval_start_dt = df.iloc[border1s[2] + context_length]['date']
         end_dt = df.iloc[border2s[2] - 1]['date']
-        print(f'>>> Split test data from {start_dt} to {end_dt}, '
-              f'and evaluation start date is: {eval_start_dt}')
+        log_in_local_rank_0(f'>>> Split test data from {start_dt} to {end_dt}, '
+                            f'and evaluation start date is: {eval_start_dt}')
 
         cols = df.columns[1:]
         df_values = df[cols].values

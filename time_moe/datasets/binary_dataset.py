@@ -19,7 +19,11 @@ class BinaryDataset(TimeSeriesDataset):
 
         # load meta file
         meta_file_path = os.path.join(data_path, self.meta_file_name)
-        self.meta_info = load_json_file(meta_file_path)
+        try:
+            self.meta_info = load_json_file(meta_file_path)
+        except Exception as e:
+            print(f'Error when loading file {meta_file_path}: {e}')
+            raise e
 
         self.num_sequences = self.meta_info['num_sequences']
         self.dtype = self.meta_info['dtype']
@@ -55,12 +59,11 @@ class BinaryDataset(TimeSeriesDataset):
         else:
             return sequence
 
-    def get_sequence_length_by_idx(self, seq_idx):
-        return self.meta_info[seq_idx]['length']
+    def get_num_tokens(self):
+        return self.num_tokens
 
-    def __iter__(self):
-        for i in range(len(self)):
-            yield self[i]
+    def get_sequence_length_by_idx(self, seq_idx):
+        return self.seq_infos[seq_idx]['length']
 
     def _get_read_infos_by_offset_length(self, offset, length):
         # just use naive search

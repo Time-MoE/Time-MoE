@@ -175,6 +175,56 @@ the downloaded contents under `./dataset`.
 python run_eval.py -d dataset/ETT-small/ETTh1.csv -p 96
 ```
 
+### Fine-tuning Time-MoE
+
+#### Preparing Your Dataset
+
+To start fine-tuning Time-MoE, your dataset should be converted into a `jsonl` format. Each line represents a time-series data as a dictionary object, where the `sequence` field contains a list of time-series observations. For example:
+
+```jsonl
+{"sequence": [1.0, 2.0, 3.0, ...]}
+{"sequence": [11.0, 22.0, 33.0, ...]}
+```
+
+You have the flexibility to save your converted data in `jsonl`, `json`, or `pickle` format. If you are using the [Time-300B](https://huggingface.co/datasets/Maple728/Time-300B) dataset, you can proceed without any additional preprocessing.
+
+#### Training
+
+**Single GPU**
+
+For training with a single GPU, execute the following command and ensure to replace `<data_path>` with the path to your prepared dataset:
+
+```bash
+python main.py -d <data_path>
+```
+
+**Single Node Multi-GPU**
+
+To leverage multiple GPUs on a single node, use this command:
+
+```bash
+python torch_dist_run.py main.py -d <data_path>
+```
+
+**Multi-Node Multi-GPU**
+
+For training across multiple nodes, additional environment configurations are necessary to facilitate inter-node communication:
+
+```bash
+export MASTER_ADDR=<master_addr>
+export MASTER_PORT=<master_port>
+export WORLD_SIZE=<world_size>
+export RANK=<rank>
+
+python torch_dist_run.py main.py -d <data_path>
+```
+
+To explore additional command-line arguments and their usage, invoke the help command:
+
+```bash
+python main.py --help
+```
+
 ## Citation
 
 > 🙋 Please let us know if you find out a mistake or have any suggestions!
