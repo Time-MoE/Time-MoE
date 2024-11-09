@@ -35,7 +35,7 @@ def get_world_size():
     try:
         world_size = dist.get_world_size()
         return world_size
-    except Exception as e:
+    except Exception:
         pass
     world_size = os.getenv('WORLD_SIZE')
     if world_size is None:

@@ -4,9 +4,9 @@ from time_moe.runner import TimeMoeRunner
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--data_path', '-d', type=str)
-    parser.add_argument('--model_path', '-m', type=str)
-    parser.add_argument('--output_path', type=str, default='logs/time_moe')
+    parser.add_argument('--data_path', '-d', type=str, help='Path to training data. (Folder contains data files, or data file)')
+    parser.add_argument('--model_path', '-m', type=str, default='Maple728/TimeMoE-50M', help='Path to pretrained model. Default: Maple728/TimeMoE-50M')
+    parser.add_argument('--output_path', '-o', type=str, default='logs/time_moe')
     parser.add_argument('--max_length', type=int, default=1024)
     parser.add_argument('--learning_rate', type=float, default=5e-5, help='learning rate')
     parser.add_argument('--min_learning_rate', type=float, default=0, help='minimum learning rate')
@@ -19,12 +19,12 @@ if __name__ == '__main__':
     parser.add_argument('--attn_implementation', type=str, choices=['eager', 'flash_attention_2'], default='eager', help='attention implementation')
     
     parser.add_argument('--lr_scheduler_type', type=str, choices=['constant', 'linear', 'cosine', 'constant_with_warmup'], default='constant', help='learning rate scheduler type')
-    parser.add_argument('--warmup_ratio', type=float, default=0.2, help='warmup ratio')
+    parser.add_argument('--warmup_ratio', type=float, default=0.0, help='warmup ratio')
     parser.add_argument('--warmup_steps', type=int, default=0, help='warmup steps')
     parser.add_argument('--weight_decay', type=float, default=0.1, help='weight decay')
     
-    parser.add_argument('--global_batch_size', type=int, default=64)
-    parser.add_argument('--micro_batch_size', type=int, default=1)
+    parser.add_argument('--global_batch_size', type=int, default=64, help='global batch size')
+    parser.add_argument('--micro_batch_size', type=int, default=1, help='micro batch size per gpu')
     
     parser.add_argument('--precision', choices=['fp32', 'fp16', 'bf16'], type=str, default='fp32', help='precision mode (default: fp32)')
     parser.add_argument('--gradient_checkpointing', action='store_true', help='enable gradient checkpointing')

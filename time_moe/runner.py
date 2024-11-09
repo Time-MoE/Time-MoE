@@ -71,7 +71,7 @@ class TimeMoeRunner:
 
         precision = train_config.get('precision', 'bf16')
         if precision not in ['bf16', 'fp16', 'fp32']:
-            logger.warning(f'Precision {precision} is not set, use fp32 default!')
+            log_in_local_rank_0(f'Precision {precision} is not set, use fp32 default!', type='warn')
             precision = 'fp32'
 
         if precision == 'bf16':
@@ -213,23 +213,8 @@ def length_to_str(length):
         return f'{length / 1e3:.3f}K'
 
 
-def get_world_size():
-    try:
-        world_size = dist.get_world_size()
-        return world_size
-    except Exception as e:
-        pass
-    world_size = os.getenv('WORLD_SIZE')
-    if world_size is None:
-        world_size = 1
-    else:
-        world_size = int(world_size)
-    return world_size
-
-
 def _safe_float(number):
     if number is None:
         return None
     else:
         return float(number)
-

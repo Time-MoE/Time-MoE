@@ -1,12 +1,15 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 _*-
-import numpy as np
 import random
+import numpy as np
 
 from time_moe.datasets.ts_dataset import TimeSeriesDataset
 
 
 class TimeMoEWindowDataset:
+    """
+    A dataset that generates windows of time series data.
+    """
     def __init__(self, dataset: TimeSeriesDataset, context_length: int, prediction_length: int = 0, **kwrags):
         self.dataset = dataset
         self.context_length = context_length
@@ -14,10 +17,16 @@ class TimeMoEWindowDataset:
         self.window_size = context_length + prediction_length
         self.window_size_plus_one = self.window_size + 1
 
-
+        num_seqs = len(self.dataset)
+        iterator = range(num_seqs)
+        try:
+            from tqdm import tqdm
+            iterator = tqdm(iterator, total=num_seqs)
+        except ImportError:
+            pass
         self.sub_seq_indexes = []
-        for seq_idx, seq in enumerate(self.dataset):
-            n_points = len(seq)
+        for seq_idx in iterator:
+            n_points = self.dataset.get_sequence_length_by_idx(seq_idx)
             for offset_idx in range(0, n_points, self.window_size):
                 self.sub_seq_indexes.append((seq_idx, offset_idx))
 
@@ -50,6 +59,9 @@ class TimeMoEWindowDataset:
 
 
 class UniversalTimeMoEWindowDataset:
+    """
+    A dataset that generates windows of time series data with pack technique.
+    """
     def __init__(self, dataset: TimeSeriesDataset, context_length: int, prediction_length: int = 0,
                  shuffle: bool = False):
         self.dataset = dataset
@@ -71,7 +83,7 @@ class UniversalTimeMoEWindowDataset:
         try:
             from tqdm import tqdm
             iterator = tqdm(iterator, total=n_seqs)
-        except:
+        except ImportError:
             pass
 
         for seq_idx in iterator:
@@ -101,7 +113,7 @@ class UniversalTimeMoEWindowDataset:
                     cur_window_info = []
 
         if num_cur_remaining_points > 0:
-            # TODO drop last temporarily
+            # drop last batch for speed-up
             pass
 
     def __len__(self):

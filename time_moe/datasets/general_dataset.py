@@ -2,17 +2,15 @@
 # -*- coding:utf-8 _*-
 import json
 import os
-
-import yaml
-import gzip
 import pickle
+import gzip
+import yaml
 import numpy as np
 
 from .ts_dataset import TimeSeriesDataset
 
 
 class GeneralDataset(TimeSeriesDataset):
-
     def __init__(self, data_path):
         self.data = read_file_by_extension(data_path)
         self.num_tokens = None
