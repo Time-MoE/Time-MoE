@@ -31,7 +31,6 @@
 > 2️⃣ Time-300B is **the largest open-access time series data collection** comprising over 300 billion time points across more than 9 domains.
 
 ## TODO list
-- [ ] Release the code for fine-tuning TimeMoE for time-series forecasting.
 - [ ] Enable fine-tuning of TimeMoE for forecasting with dynamic features and support time-series classification.
 
 ## Updates/News:
