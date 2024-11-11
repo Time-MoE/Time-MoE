@@ -174,7 +174,7 @@ the downloaded contents under `./dataset`.
 python run_eval.py -d dataset/ETT-small/ETTh1.csv -p 96
 ```
 
-### Fine-tuning Time-MoE
+### 🔥 Fine-tuning Time-MoE
 
 #### Preparing Your Dataset
 
