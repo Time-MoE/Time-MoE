@@ -26,7 +26,7 @@ class GeneralDataset(TimeSeriesDataset):
 
     def get_num_tokens(self):
         if self.num_tokens is None:
-            self.num_tokens = sum([len(seq) for seq in self.data])
+            self.num_tokens = sum([len(seq) for seq in self])
         return self.num_tokens
 
     def get_sequence_length_by_idx(self, seq_idx):
