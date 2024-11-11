@@ -46,10 +46,6 @@ class TimeMoEWindowDataset:
         if n_pad > 0:
             seq = np.pad(seq, (0, n_pad), 'constant', constant_values=0)
             loss_mask = np.pad(loss_mask, (0, n_pad), 'constant', constant_values=0)
-        
-        if len(seq) != len(loss_mask) + 1:
-            print('---', seq.shape, loss_mask.shape)
-            raise ValueError()
 
         return {
             'input_ids': seq[:-1],
