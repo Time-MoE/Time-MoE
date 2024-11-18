@@ -77,7 +77,7 @@ class TimeMoeRunner:
         if precision == 'bf16':
             torch_dtype = torch.bfloat16
         elif precision == 'fp16':
-            torch_dtype = torch.float16
+            torch_dtype = torch.float32
         elif precision == 'fp32':
             torch_dtype = torch.float32
         else:
@@ -148,7 +148,7 @@ class TimeMoeRunner:
 
         # print statistics info
         log_in_local_rank_0(train_config)
-        # log_in_local_rank_0(training_args)
+        log_in_local_rank_0(training_args)
         log_in_local_rank_0(model.config)
         log_in_local_rank_0(f'Number of the model parameters: {length_to_str(num_total_params)}')
 
