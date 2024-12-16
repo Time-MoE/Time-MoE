@@ -12,7 +12,7 @@ if __name__ == '__main__':
     parser.add_argument('--min_learning_rate', type=float, default=0, help='minimum learning rate')
 
     parser.add_argument('--train_steps', type=int, default=None, help='number of training steps')
-    parser.add_argument('--num_train_epochs', type=int, default=1, help='number of training epochs')
+    parser.add_argument('--num_train_epochs', type=float, default=1.0, help='number of training epochs')
     parser.add_argument('--normalization_method', type=str, choices=['none', 'zero', 'max'], default='zero', help='normalization method for sequence')
 
     parser.add_argument('--seed', type=int, default=9899, help='random seed')
