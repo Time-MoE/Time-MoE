@@ -52,13 +52,23 @@ class MAEMetric(SumEvalMetric):
 
 class TimeMoE:
     def __init__(self, model_path, device, context_length, prediction_length, **kwargs):
-        model = AutoModelForCausalLM.from_pretrained(
-            model_path,
-            device_map=device,
-            # attn_implementation='flash_attention_2',
-            torch_dtype='auto',
-            trust_remote_code=True,
-        )
+        try:
+            from time_moe.models.modeling_time_moe import TimeMoeForPrediction
+            model = TimeMoeForPrediction.from_pretrained(
+                model_path,
+                device_map=device,
+                # attn_implementation='flash_attention_2',
+                torch_dtype='auto',
+            )
+        except:
+            model = AutoModelForCausalLM.from_pretrained(
+                model_path,
+                device_map=device,
+                # attn_implementation='flash_attention_2',
+                torch_dtype='auto',
+                trust_remote_code=True,
+            )
+
         logging.info(f'>>> Model dtype: {model.dtype}; Attention:{model.config._attn_implementation}')
 
         self.model = model
