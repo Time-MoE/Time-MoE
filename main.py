@@ -16,7 +16,7 @@ if __name__ == '__main__':
     parser.add_argument('--normalization_method', type=str, choices=['none', 'zero', 'max'], default='zero', help='normalization method for sequence')
 
     parser.add_argument('--seed', type=int, default=9899, help='random seed')
-    parser.add_argument('--attn_implementation', type=str, choices=['eager', 'flash_attention_2'], default='eager', help='attention implementation')
+    parser.add_argument('--attn_implementation', type=str, choices=['auto', 'eager', 'flash_attention_2'], default='auto', help='attention implementation')
     
     parser.add_argument('--lr_scheduler_type', type=str, choices=['constant', 'linear', 'cosine', 'constant_with_warmup'], default='constant', help='learning rate scheduler type')
     parser.add_argument('--warmup_ratio', type=float, default=0.0, help='warmup ratio')
@@ -44,6 +44,7 @@ if __name__ == '__main__':
     parser.add_argument('--adam_epsilon', type=float, default=1e-8, help='adam epsilon')
     parser.add_argument('--max_grad_norm', type=float, default=1.0, help='max gradient norm')
     parser.add_argument('--dataloader_num_workers', type=int, default=4, help='number of workers for dataloader')
+
 
     args = parser.parse_args()
 
@@ -89,5 +90,4 @@ if __name__ == '__main__':
         dataloader_num_workers=args.dataloader_num_workers,
         save_only_model=args.save_only_model,
         save_total_limit=args.save_total_limit,
-
     )
