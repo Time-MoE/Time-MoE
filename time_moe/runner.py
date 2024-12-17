@@ -30,6 +30,27 @@ class TimeMoeRunner:
     def load_model(self, model_path: str = None, **kwargs):
         if model_path is None:
             model_path = self.model_path
+        attn = kwargs.pop('attn_implementation', None)
+        if attn is None:
+            attn = 'eager'
+        elif attn == 'auto':
+            # try to use flash-attention
+            try:
+                from flash_attn import flash_attn_func, flash_attn_varlen_func
+                from flash_attn.bert_padding import index_first_axis, pad_input, unpad_input  # noqa
+                attn = 'flash_attention_2'
+            except:
+                log_in_local_rank_0('Flash attention import failed, switching to eager attention.', type='warn')
+                attn = 'eager'
+        
+        if attn == 'eager':
+            log_in_local_rank_0('Use Eager Attention')
+        elif attn == 'flash_attention_2':
+            log_in_local_rank_0('Use Flash Attention 2')
+        else:
+            raise ValueError(f'Unknown attention method: {attn}')
+        kwargs['attn_implementation'] = attn
+
         return TimeMoeForPrediction.from_pretrained(model_path, **kwargs)
 
     def train_model(self, **kwargs):
@@ -77,6 +98,7 @@ class TimeMoeRunner:
         if precision == 'bf16':
             torch_dtype = torch.bfloat16
         elif precision == 'fp16':
+            # use fp32 to load model but uses fp15 to train model
             torch_dtype = torch.float32
         elif precision == 'fp32':
             torch_dtype = torch.float32

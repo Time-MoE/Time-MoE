@@ -189,23 +189,23 @@ You have the flexibility to save your converted data in `jsonl`, `json`, or `pic
 
 #### Training
 
-**Single GPU**
+**CPU**
 
-For training with a single GPU, execute the following command and ensure to replace `<data_path>` with the path to your prepared dataset:
+For training with cpu, execute the following command and ensure to replace `<data_path>` with the path to your prepared dataset:
 
 ```bash
 python main.py -d <data_path>
 ```
 
-**Single Node Multi-GPU**
+**Single Node with Single or Multiple GPUs**
 
-To leverage multiple GPUs on a single node, use this command:
+To leverage a single GPU or multiple GPUs on a single node, use this command:
 
 ```bash
 python torch_dist_run.py main.py -d <data_path>
 ```
 
-**Multi-Node Multi-GPU**
+**Multi-Nodes Multi-GPUs**
 
 For training across multiple nodes, additional environment configurations are necessary to facilitate inter-node communication:
 
