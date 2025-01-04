@@ -24,7 +24,7 @@ if __name__ == '__main__':
     parser.add_argument('--weight_decay', type=float, default=0.1, help='weight decay')
     
     parser.add_argument('--global_batch_size', type=int, default=64, help='global batch size')
-    parser.add_argument('--micro_batch_size', type=int, default=1, help='micro batch size per gpu')
+    parser.add_argument('--micro_batch_size', type=int, default=16, help='micro batch size per device')
     
     parser.add_argument('--precision', choices=['fp32', 'fp16', 'bf16'], type=str, default='fp32', help='precision mode (default: fp32)')
     parser.add_argument('--gradient_checkpointing', action='store_true', help='enable gradient checkpointing')
