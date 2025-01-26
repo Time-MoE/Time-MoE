@@ -1,5 +1,5 @@
 <div align="center">
-  <h3><b>Time-MoE: Billion-Scale Time Series Foundation Models with Mixture of Experts </b></h2>
+  <h3><b>(ICLR'25) Time-MoE: Billion-Scale Time Series Foundation Models with Mixture of Experts </b></h2>
 </div>
 
 <div align="center">
@@ -13,7 +13,7 @@
 
 <div align="center">
 
-**[<a href="https://arxiv.org/pdf/2409.16040">Paper Page</a>]**
+**[<a href="https://arxiv.org/abs/2409.16040">Paper Page</a>]**
 **[<a href="https://mp.weixin.qq.com/s/LaYn0IJAOlN9Ufp_qus96Q">中文解读</a>]**
 
 </div>
@@ -25,28 +25,28 @@
 </p>
 
 
-> 1️⃣ Time-MoE is **the first work to scale time series foundation models up to 2.4 billion parameters**, trained from
+> 1️⃣ Time-MoE is the **first work** to scale time series foundation models up to **2.4 billion** parameters, trained from
 > scratch.
 
-> 2️⃣ Time-300B is **the largest open-access time series data collection** comprising over 300 billion time points across more than 9 domains.
+> 2️⃣ Time-300B is the **largest** open-access time series data collection comprising over **300 billion** time points across >9 domains.
 
-## TODO list
-- [ ] Enable fine-tuning of TimeMoE for forecasting with dynamic features and support time-series classification.
+## TODO List
+- [ ] Add covariate support
+- [ ] Enable fine-tuning of Time-MoE for forecasting with dynamic features and support time series classification
 
 ## Updates/News:
 
-🚩 **News** (Oct 2024): Time-MoE introduction in [Chinese](https://mp.weixin.qq.com/s/LaYn0IJAOlN9Ufp_qus96Q) is now available!
+🚩 **News** (Jan 2025): Time-MoE has been accpeted by ICLR 2025!
 
-🚩 **News** (Oct 2024): Time-300B dataset is now available 
-on [🤗 Hugging Face](https://huggingface.co/datasets/Maple728/Time-300B)!
+🚩 **News** (Oct 2024): Time-MoE introduction in [Chinese](https://mp.weixin.qq.com/s/LaYn0IJAOlN9Ufp_qus96Q)
 
-🚩 **News** (Oct 2024): Time-MoE (large) is now available
-on [🤗 Hugging Face](https://huggingface.co/Maple728/TimeMoE-200M)!
+🚩 **News** (Oct 2024): [Time-300B](https://huggingface.co/datasets/Maple728/Time-300B) dataset is now available 
+on 🤗 Hugging Face
 
-🚩 **News** (Sept 2024): Time-MoE (base) is now available
-on [🤗 Hugging Face](https://huggingface.co/Maple728/TimeMoE-50M)!
+🚩 **News** (Oct 2024): [Time-MoE (base)](https://huggingface.co/Maple728/TimeMoE-200M) and [Time-MoE (large)](https://huggingface.co/Maple728/TimeMoE-200M) are made available
+on 🤗 Hugging Face
 
-🚩 **News** (Sept 2024): Time-MoE preprint has been made available on [arXiv](https://arxiv.org/pdf/2409.16040)!
+🚩 **News** (Sept 2024): Time-MoE preprint has been made available on [arXiv](https://arxiv.org/pdf/2409.16040)
 
 ## Introduction
 
@@ -58,22 +58,9 @@ context lengths of up to 4096.
     <img src="figures/time_moe_framework.png" alt="" align="center" width="700px" />
 </p>
 
-
-<div align="center">
-
-### 🗂️ Time-MoE Model Card
-
-| Model                                                                | Activated Params. | Total Params. |
-|----------------------------------------------------------------------|-------------------|---------------|
-| [**Time-MoE (base)**](https://huggingface.co/Maple728/TimeMoE-50M)   | 50M               | 113M          |
-| [**Time-MoE (large)**](https://huggingface.co/Maple728/TimeMoE-200M) | 200M              | 453M          |
-| **Time-MoE (ultra)**                                                 | 1.1B              | 2.4B          |
-
-</div>
-
 ## 📚 Training Data
 
-Time-300B dataset is available on [🤗 Hugging Face](https://huggingface.co/datasets/Maple728/Time-300B)!
+[Time-300B dataset](https://huggingface.co/datasets/Maple728/Time-300B) is available on 🤗 Hugging Face.
 
 Here's an example of how to use this dataset:
 ```python
@@ -246,18 +233,17 @@ python main.py --help
 ```
 
 ## Related Resources
+* Towards Neural Scaling Laws for Time Series Foundation Models, arXiv 2024. [\[paper\]](https://arxiv.org/pdf/2410.12360)
+* TimeMixer++: A General Time Series Pattern Machine for Universal Predictive Analysis, in arXiv 2024. [\[paper\]](https://arxiv.org/abs/2410.16032) [\[GitHub Repo\]](https://github.com/kwuking/TimeMixer)
 * Foundation Models for Time Series Analysis: A Tutorial and Survey, in *KDD*
   2024. [\[paper\]](https://arxiv.org/abs/2403.14735) [\[Tutorial\]](https://wenhaomin.github.io/FM4TS.github.io/)
 * What Can Large Language Models Tell Us about Time Series Analysis, in *ICML*
   2024. [\[paper\]](https://arxiv.org/abs/2402.02713)
 * Self-Supervised Learning for Time Series Analysis: Taxonomy, Progress, and Prospects, in *TPAMI*
   2024. [\[paper\]](https://arxiv.org/abs/2306.10125) [\[Website\]](https://github.com/qingsongedu/Awesome-SSL4TS)
-* A Survey on Graph Neural Networks for Time Series: Forecasting, Classification, Imputation, and Anomaly Detection, in
-  *TPAMI* 2024. [\[paper\]](https://arxiv.org/abs/2307.03759) [\[Website\]](https://github.com/KimMeen/Awesome-GNN4TS)
 * Transformers in Time Series: A Survey, in *IJCAI*
   2023. [\[paper\]](https://arxiv.org/abs/2202.07125) [\[GitHub Repo\]](https://github.com/qingsongedu/time-series-transformers-review)
-* Towards Neural Scaling Laws for Time Series Foundation Models, arXiv 2024. [\[paper\]](https://arxiv.org/pdf/2410.12360)
-* TimeMixer++: A General Time Series Pattern Machine for Universal Predictive Analysis, in arXiv 2024. [\[paper\]](https://arxiv.org/abs/2410.16032) [\[GitHub Repo\]](https://github.com/kwuking/TimeMixer)
+* A Survey on Graph Neural Networks for Time Series: Forecasting, Classification, Imputation, and Anomaly Detection, in *TPAMI* 2024. [\[paper\]](https://arxiv.org/abs/2307.03759) [\[Website\]](https://github.com/KimMeen/Awesome-GNN4TS)
 
 
 ## Acknowledgement
