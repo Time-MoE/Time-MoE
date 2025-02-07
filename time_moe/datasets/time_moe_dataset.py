@@ -97,11 +97,13 @@ def zero_scaler(seq):
     if not isinstance(seq, np.ndarray):
         seq = np.array(seq)
     origin_dtype = seq.dtype
-    std_val = seq.std(dtype=np.float64)
+    # std_val = seq.std(dtype=np.float64)
+    std_val = seq.std()
     if std_val == 0:
         normed_seq = seq
     else:
-        mean_val = seq.mean(dtype=np.float64)
+        # mean_val = seq.mean(dtype=np.float64)
+        mean_val = seq.mean()
         normed_seq = (seq - mean_val) / std_val
 
     return normed_seq.astype(origin_dtype)
@@ -111,7 +113,8 @@ def max_scaler(seq):
     if not isinstance(seq, np.ndarray):
         seq = np.array(seq)
     origin_dtype = seq.dtype
-    max_val = np.abs(seq).max(dtype=np.float64)
+    # max_val = np.abs(seq).max(dtype=np.float64)
+    max_val = np.abs(seq).max()
     if max_val == 0:
         normed_seq = seq
     else:
