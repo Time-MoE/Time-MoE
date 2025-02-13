@@ -1,5 +1,5 @@
 <div align="center">
-  <h3><b>(ICLR'25) Time-MoE: Billion-Scale Time Series Foundation Models with Mixture of Experts </b></h2>
+  <h2><b>(ICLR'25 Spotlight) Time-MoE: Billion-Scale Time Series Foundation Models with Mixture of Experts </b></h2>
 </div>
 
 <div align="center">
@@ -36,7 +36,7 @@
 
 ## Updates/News:
 
-🚩 **News** (Jan 2025): Time-MoE has been accpeted by ICLR 2025!
+🚩 **News** (Feb 2025): Time-MoE has been accpeted by ICLR 2025 as a Spotlight (Top 5.1%)!
 
 🚩 **News** (Oct 2024): Time-MoE introduction in [Chinese](https://mp.weixin.qq.com/s/LaYn0IJAOlN9Ufp_qus96Q)
 
