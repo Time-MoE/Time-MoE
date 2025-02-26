@@ -10,7 +10,7 @@ import torch.distributed as dist
 
 from time_moe.datasets.time_moe_dataset import TimeMoEDataset
 from time_moe.datasets.time_moe_window_dataset import TimeMoEWindowDataset
-from time_moe.models.modeling_time_moe import TimeMoeForPrediction
+from time_moe.models.modeling_time_moe import TimeMoeForPrediction, TimeMoeConfig
 from time_moe.trainer.hf_trainer import TimeMoETrainingArguments, TimeMoeTrainer
 from time_moe.utils.dist_util import get_world_size
 from time_moe.utils.log_util import logger, log_in_local_rank_0
@@ -27,7 +27,7 @@ class TimeMoeRunner:
         self.output_path = output_path
         self.seed = seed
 
-    def load_model(self, model_path: str = None, **kwargs):
+    def load_model(self, model_path: str = None, from_scatch: bool = False, **kwargs):
         if model_path is None:
             model_path = self.model_path
         attn = kwargs.pop('attn_implementation', None)
@@ -51,9 +51,14 @@ class TimeMoeRunner:
             raise ValueError(f'Unknown attention method: {attn}')
         kwargs['attn_implementation'] = attn
 
-        return TimeMoeForPrediction.from_pretrained(model_path, **kwargs)
+        if from_scatch:
+            config = TimeMoeConfig.from_pretrained(model_path, _attn_implementation=attn)
+            model = TimeMoeForPrediction(config)
+        else:
+            model = TimeMoeForPrediction.from_pretrained(model_path, **kwargs)
+        return model
 
-    def train_model(self, **kwargs):
+    def train_model(self, from_scratch: bool = False, **kwargs):
         setup_seed(self.seed)
 
         train_config = kwargs
@@ -157,8 +162,9 @@ class TimeMoeRunner:
         if model_path is not None:
             model = self.load_model(
                 model_path=model_path,
+                from_scatch=from_scratch,
                 torch_dtype=torch_dtype,
-                attn_implementation=train_config.get('attn_implementation', 'eager')
+                attn_implementation=train_config.get('attn_implementation', 'eager'),
             )
             log_in_local_rank_0(f'Load model parameters from: {model_path}')
         else:
