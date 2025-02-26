@@ -208,6 +208,12 @@ export RANK=<rank>
 python torch_dist_run.py main.py -d <data_path>
 ```
 
+To train Time-MoE from scratch, simply include the `--from_scratch` argument in your command. Here's how it should look:
+
+```bash
+python torch_dist_run.py main.py -d <data_path> --from_scratch
+```
+
 To explore additional command-line arguments and their usage, invoke the help command:
 
 ```bash
@@ -233,8 +239,8 @@ python main.py --help
 ```
 
 ## Related Resources
-* Towards Neural Scaling Laws for Time Series Foundation Models, arXiv 2024. [\[paper\]](https://arxiv.org/pdf/2410.12360)
 * TimeMixer++: A General Time Series Pattern Machine for Universal Predictive Analysis, in arXiv 2024. [\[paper\]](https://arxiv.org/abs/2410.16032) [\[GitHub Repo\]](https://github.com/kwuking/TimeMixer)
+* Towards Neural Scaling Laws for Time Series Foundation Models, arXiv 2024. [\[paper\]](https://arxiv.org/pdf/2410.12360)
 * Foundation Models for Time Series Analysis: A Tutorial and Survey, in *KDD*
   2024. [\[paper\]](https://arxiv.org/abs/2403.14735) [\[Tutorial\]](https://wenhaomin.github.io/FM4TS.github.io/)
 * What Can Large Language Models Tell Us about Time Series Analysis, in *ICML*
