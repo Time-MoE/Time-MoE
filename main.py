@@ -30,6 +30,7 @@ if __name__ == '__main__':
     parser.add_argument('--gradient_checkpointing', action='store_true', help='enable gradient checkpointing')
     parser.add_argument('--deepspeed', type=str, default=None, help='DeepSpeed config file path')
 
+    parser.add_argument('--from_scratch', action='store_true', help='train from scratch')
     parser.add_argument('--save_steps', type=int, default=None, help='number of steps to save model')
     parser.add_argument('--save_strategy', choices=['steps', 'epoch', 'no'], type=str, default='no', help='save strategy')
     parser.add_argument('--save_total_limit', type=int, default=None, help='limit the number of checkpoints')
@@ -57,6 +58,7 @@ if __name__ == '__main__':
     )
 
     runner.train_model(
+        from_scratch=args.from_scratch,
         max_length=args.max_length,
         data_path=args.data_path,
         normalization_method=args.normalization_method,
