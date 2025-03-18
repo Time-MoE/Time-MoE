@@ -6,6 +6,7 @@ import pandas as pd
 from torch.utils.data import Dataset
 from sklearn.preprocessing import StandardScaler
 
+from time_moe.datasets.general_dataset import GeneralDataset
 from time_moe.utils.log_util import log_in_local_rank_0
 
 
@@ -75,6 +76,54 @@ class BenchmarkEvalDataset(Dataset):
         seq = self.hf_dataset[seq_i]
 
         window_seq = np.array(seq[offset_i - self.window_length: offset_i], dtype=np.float32)
+
+        return {
+            'inputs': np.array(window_seq[: self.context_length], dtype=np.float32),
+            'labels': np.array(window_seq[-self.prediction_length:], dtype=np.float32),
+        }
+
+
+class GeneralEvalDataset(Dataset):
+
+    def __init__(self, data_path, context_length: int, prediction_length: int, onfly_norm: bool = False):
+        super().__init__()
+        self.context_length = context_length
+        self.prediction_length = prediction_length
+        self.onfly_norm = onfly_norm
+        self.window_length = self.context_length + self.prediction_length
+        self.dataset = GeneralDataset(data_path)
+
+        self.sub_seq_indexes = []
+        for seq_idx, seq in enumerate(self.dataset):
+            n_points = len(seq)
+            if n_points < self.window_length:
+                continue
+            for offset_idx in range(self.window_length, n_points):
+                self.sub_seq_indexes.append((seq_idx, offset_idx))
+
+    def __len__(self):
+        return len(self.sub_seq_indexes)
+
+    def __iter__(self):
+        for i in range(len(self)):
+            yield self[i]
+
+    def __getitem__(self, idx):
+        seq_i, offset_i = self.sub_seq_indexes[idx]
+        seq = self.dataset[seq_i]
+
+        window_seq = np.array(seq[offset_i - self.window_length: offset_i], dtype=np.float32)
+
+        inputs = np.array(window_seq[: self.context_length], dtype=np.float32)
+        labels = np.array(window_seq[-self.prediction_length:], dtype=np.float32)
+
+        if self.onfly_norm:
+            mean_ = inputs.mean()
+            std_ = inputs.std()
+            if std_ == 0:
+                std_ = 1
+            inputs = (inputs - mean_) / std_
+            labels = (labels - mean_) / std_
 
         return {
             'inputs': np.array(window_seq[: self.context_length], dtype=np.float32),
