@@ -12,7 +12,7 @@ from tqdm import tqdm
 
 from transformers import AutoModelForCausalLM
 
-from time_moe.datasets.benchmark_dataset import BenchmarkEvalDataset
+from time_moe.datasets.benchmark_dataset import BenchmarkEvalDataset, GeneralEvalDataset
 
 
 def setup_nccl(rank, world_size, master_addr='127.0.0.1', master_port=9899):
@@ -127,11 +127,18 @@ def evaluate(args):
         context_length=context_length,
         prediction_length=prediction_length
     )
-    dataset = BenchmarkEvalDataset(
-        args.data,
-        context_length=context_length,
-        prediction_length=prediction_length,
-    )
+    if args.data.endswith('.csv'):
+        dataset = BenchmarkEvalDataset(
+            args.data,
+            context_length=context_length,
+            prediction_length=prediction_length,
+        )
+    else:
+        dataset = GeneralEvalDataset(
+            args.data,
+            context_length=context_length,
+            prediction_length=prediction_length,
+        )
 
     if torch.cuda.is_available() and dist.is_initialized():
         sampler = DistributedSampler(dataset=dataset, shuffle=False)

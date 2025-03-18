@@ -155,7 +155,7 @@ If you wish to support longer sequence length, please fine-tune Time-MoE with th
 + Prepare the benchmark datasets.
 
 You can access the well pre-processed datasets
-from [[Google Drive]](https://drive.google.com/file/d/1NF7VEefXCmXuWNbnNe858WvQAkJ_7wuP/view?usp=sharing), then place
+from [[Google Drive]](https://drive.google.com/drive/folders/1KjnAYr9X3D-jyJpo4yM7Giyq5V1Hga_7?usp=sharing), then place
 the downloaded contents under `./dataset`.
 
 + [Example] Running the follow command to evaluate on ETTh1.
