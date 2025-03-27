@@ -92,7 +92,10 @@ pip install -r requirements.txt
 pip install flash-attn==2.6.3
 ```
 
-### Making Forecasts
+### 📈 Making Forecasts
+
+**Note**: The `max_position_embeddings` for Time-MoE is set to during training. This means the maximum sequence length for Time-MoE is **4096**. To achieve optimal forecasting performance, it is recommended that **the sum of `context_length` and `prediction_length` does not exceed 4096.**
+If you wish to support longer sequence length, please fine-tune Time-MoE with the desired longer sequence length.
 
 ```python
 import torch
@@ -146,9 +149,6 @@ prediction_length = 6
 output = model.generate(normed_seqs, max_new_tokens=prediction_length)  # shape is [batch_size, 12 + 6]
 normed_predictions = output[:, -prediction_length:]  # shape is [batch_size, 6]
 ```
-
-**Note**: The `max_position_embeddings` for Time-MoE is set to during training. This means the maximum sequence length for Time-MoE is **4096**. To achieve optimal forecasting performance, it is recommended that **the sum of `context_length` and `prediction_length` does not exceed 4096.**
-If you wish to support longer sequence length, please fine-tune Time-MoE with the desired longer sequence length.
 
 ### Evaluation
 
