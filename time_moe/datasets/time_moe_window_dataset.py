@@ -27,6 +27,9 @@ class TimeMoEWindowDataset:
         self.sub_seq_indexes = []
         for seq_idx in iterator:
             n_points = self.dataset.get_sequence_length_by_idx(seq_idx)
+            # Skip sequences with fewer than 2 points
+            if n_points < 2:
+                continue
             for offset_idx in range(0, n_points, self.window_size):
                 self.sub_seq_indexes.append((seq_idx, offset_idx))
 
@@ -36,6 +39,7 @@ class TimeMoEWindowDataset:
     def __iter__(self):
         for i in range(len(self)):
             yield self[i]
+
     def __getitem__(self, seq_idx):
         seq_i, offset_i = self.sub_seq_indexes[seq_idx]
         seq = self.dataset[seq_i][offset_i: offset_i + self.window_size_plus_one]
