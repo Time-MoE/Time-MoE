@@ -8,8 +8,8 @@ if __name__ == '__main__':
     parser.add_argument('--model_path', '-m', type=str, default='Maple728/TimeMoE-50M', help='Path to pretrained model. Default: Maple728/TimeMoE-50M')
     parser.add_argument('--output_path', '-o', type=str, default='logs/time_moe')
     parser.add_argument('--max_length', type=int, default=1024)
-    parser.add_argument('--learning_rate', type=float, default=5e-5, help='learning rate')
-    parser.add_argument('--min_learning_rate', type=float, default=0, help='minimum learning rate')
+    parser.add_argument('--learning_rate', type=float, default=1e-4, help='learning rate')
+    parser.add_argument('--min_learning_rate', type=float, default=5e-5, help='minimum learning rate')
 
     parser.add_argument('--train_steps', type=int, default=None, help='number of training steps')
     parser.add_argument('--num_train_epochs', type=float, default=1.0, help='number of training epochs')
@@ -18,7 +18,7 @@ if __name__ == '__main__':
     parser.add_argument('--seed', type=int, default=9899, help='random seed')
     parser.add_argument('--attn_implementation', type=str, choices=['auto', 'eager', 'flash_attention_2'], default='auto', help='attention implementation')
     
-    parser.add_argument('--lr_scheduler_type', type=str, choices=['constant', 'linear', 'cosine', 'constant_with_warmup'], default='constant', help='learning rate scheduler type')
+    parser.add_argument('--lr_scheduler_type', type=str, choices=['constant', 'linear', 'cosine', 'constant_with_warmup'], default='cosine', help='learning rate scheduler type')
     parser.add_argument('--warmup_ratio', type=float, default=0.0, help='warmup ratio')
     parser.add_argument('--warmup_steps', type=int, default=0, help='warmup steps')
     parser.add_argument('--weight_decay', type=float, default=0.1, help='weight decay')
