@@ -188,6 +188,8 @@ You have the flexibility to save your converted data in `jsonl`, `json`, or `pic
 
 #### Training
 
+**Note: If your dataset is small, it is recommended to set `stride` to `1` by adding `--stride 1` to your training command.**
+
 **CPU**
 
 For training with cpu, execute the following command and ensure to replace `<data_path>` with the path to your prepared dataset:
@@ -217,7 +219,7 @@ export RANK=<rank>
 python torch_dist_run.py main.py -d <data_path>
 ```
 
-To train Time-MoE from scratch, simply include the `--from_scratch` argument in your command. Here's how it should look:
+To train Time-MoE **from scratch**, simply include the `--from_scratch` argument in your command. Here's how it should look:
 
 ```bash
 python torch_dist_run.py main.py -d <data_path> --from_scratch
