@@ -173,9 +173,9 @@ the downloaded contents under `./dataset`.
 python run_eval.py -d dataset/ETT-small/ETTh1.csv -p 96
 ```
 
-### 🔥 Fine-tuning Time-MoE
+## 🔥 Fine-tuning Time-MoE
 
-#### Preparing Your Dataset
+### Preparing Your Dataset
 
 To start fine-tuning Time-MoE, your dataset should be converted into a `jsonl` format. Each line represents a time-series data as a dictionary object, where the `sequence` field contains a list of time-series observations. For example:
 
@@ -186,7 +186,7 @@ To start fine-tuning Time-MoE, your dataset should be converted into a `jsonl` f
 
 You have the flexibility to save your converted data in `jsonl`, `json`, or `pickle` format. If you are using the [Time-300B](https://huggingface.co/datasets/Maple728/Time-300B) dataset, you can proceed without any additional preprocessing.
 
-#### Training
+### Training Time-MoE on Your Dataset
 
 **Note: If your dataset is small, it is recommended to set `stride` to `1` by adding `--stride 1` to your training command.**
 
