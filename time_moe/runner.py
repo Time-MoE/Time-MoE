@@ -4,9 +4,7 @@ import random
 from functools import reduce
 from operator import mul
 
-import numpy as np
 import torch
-import torch.distributed as dist
 
 from time_moe.datasets.time_moe_dataset import TimeMoEDataset
 from time_moe.datasets.time_moe_window_dataset import TimeMoEWindowDataset
@@ -42,7 +40,7 @@ class TimeMoeRunner:
             except:
                 log_in_local_rank_0('Flash attention import failed, switching to eager attention.', type='warn')
                 attn = 'eager'
-        
+
         if attn == 'eager':
             log_in_local_rank_0('Use Eager Attention')
         elif attn == 'flash_attention_2':
@@ -64,7 +62,7 @@ class TimeMoeRunner:
         train_config = kwargs
 
         num_devices = get_world_size()
-        
+
         global_batch_size = train_config.get('global_batch_size', None)
         micro_batch_size = train_config.get('micro_batch_size', None)
 
@@ -185,7 +183,12 @@ class TimeMoeRunner:
             log_in_local_rank_0(f'Tokens will consume: {length_to_str(total_train_tokens)}')
 
         # Training
-        train_ds = self.get_train_dataset(train_config['data_path'], max_length=train_config['max_length'], normalization_method=train_config['normalization_method'])
+        train_ds = self.get_train_dataset(
+            train_config["data_path"],
+            max_length=train_config["max_length"],
+            stride=train_config["stride"],
+            normalization_method=train_config["normalization_method"],
+        )
         trainer = TimeMoeTrainer(
             model=model,
             args=training_args,
@@ -197,13 +200,12 @@ class TimeMoeRunner:
 
         return trainer.model
 
-    def get_train_dataset(self, data_path, max_length, normalization_method):
+    def get_train_dataset(self, data_path, max_length, stride, normalization_method):
         log_in_local_rank_0('Loading dataset...')
         dataset = TimeMoEDataset(data_path, normalization_method=normalization_method)
         log_in_local_rank_0('Processing dataset to fixed-size sub-sequences...')
-        window_dataset = TimeMoEWindowDataset(dataset, context_length=max_length, prediction_length=0, shuffle=False)
+        window_dataset = TimeMoEWindowDataset(dataset, context_length=max_length, prediction_length=0, stride=stride, shuffle=False)
         return window_dataset
-
 
 
 def setup_seed(seed: int = 9899):
