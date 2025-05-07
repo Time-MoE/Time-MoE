@@ -8,14 +8,42 @@ from time_moe.datasets.ts_dataset import TimeSeriesDataset
 
 class TimeMoEWindowDataset:
     """
-    A dataset that generates windows of time series data.
+    A dataset class for generating non-overlapping sliding windows from a time series dataset. 
+    This is useful for training models that require fixed-length input sequences and corresponding labels.
+
+    Attributes:
+        dataset (TimeSeriesDataset): The underlying time series dataset.
+        context_length (int): Length of the input context window.
+        prediction_length (int): Length of the prediction window. Defaults to 0.
+        window_size (int): Total size of the sliding window (context_length + prediction_length).
+        window_size_plus_one (int): Total size of the sliding window plus one.
+        stride (int): Step size for sliding the window. Defaults to window_size.
+        sub_seq_indexes (list): List of tuples containing sequence indices and their corresponding offsets.
+
+    Methods:
+        __len__():
+            Returns the total number of sliding windows in the dataset.
+        __iter__():
+            Iterates over the dataset, yielding one sliding window at a time.
+        __getitem__(seq_idx):
+            Retrieves a sliding window, its labels, and a loss mask.
+
+    Example:
+        >>> dataset = TimeSeriesDataset(...)  # Assume this is a predefined dataset
+        >>> context_length = 10
+        >>> prediction_length = 5
+        >>> window_dataset = TimeMoEWindowDataset(dataset, context_length, prediction_length)
+        >>> for sample in window_dataset:
+        >>>     print(sample['input_ids'], sample['labels'], sample['loss_masks'])
     """
-    def __init__(self, dataset: TimeSeriesDataset, context_length: int, prediction_length: int = 0, **kwrags):
+
+    def __init__(self, dataset: TimeSeriesDataset, context_length: int, prediction_length: int = 0, stride: int = None, **kwrags):
         self.dataset = dataset
         self.context_length = context_length
         self.prediction_length = prediction_length
         self.window_size = context_length + prediction_length
         self.window_size_plus_one = self.window_size + 1
+        self.stride = stride if stride else self.window_size
 
         num_seqs = len(self.dataset)
         iterator = range(num_seqs)
@@ -30,10 +58,15 @@ class TimeMoEWindowDataset:
             # Skip sequences with fewer than 2 points
             if n_points < 2:
                 continue
-            for offset_idx in range(0, n_points, self.window_size):
+            self.sub_seq_indexes.append((seq_idx, 0))
+            for offset_idx in range(
+                self.stride,
+                n_points - self.window_size_plus_one + 1,
+                self.stride
+            ):
                 self.sub_seq_indexes.append((seq_idx, offset_idx))
 
-    def __len__(self):
+    def __len__(self): 
         return len(self.sub_seq_indexes)
 
     def __iter__(self):
@@ -63,7 +96,7 @@ class UniversalTimeMoEWindowDataset:
     A dataset that generates windows of time series data with pack technique.
     """
     def __init__(self, dataset: TimeSeriesDataset, context_length: int, prediction_length: int = 0,
-                 shuffle: bool = False):
+                 shuffle: bool = False, **kwrags):
         self.dataset = dataset
         self.context_length = context_length
         self.prediction_length = prediction_length
