@@ -98,12 +98,12 @@ def zero_scaler(seq):
         seq = np.array(seq)
     origin_dtype = seq.dtype
     # std_val = seq.std(dtype=np.float64)
+    # mean_val = seq.mean(dtype=np.float64)
+    mean_val = seq.mean()
     std_val = seq.std()
     if std_val == 0:
-        normed_seq = seq
+        normed_seq = seq - mean_val
     else:
-        # mean_val = seq.mean(dtype=np.float64)
-        mean_val = seq.mean()
         normed_seq = (seq - mean_val) / std_val
 
     return normed_seq.astype(origin_dtype)
