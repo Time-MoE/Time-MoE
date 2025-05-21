@@ -99,14 +99,8 @@ if __name__ == '__main__':
         help='Port to use for distributed training'
     )
 
-    parser.add_argument('remainder', nargs=argparse.REMAINDER)
-
-    args = parser.parse_args()
-
-    if len(args.remainder) > 0:
-        argv = ' '.join(args.remainder)
-    else:
-        argv = ''
+    args, unknown = parser.parse_known_args()
+    argv = ' '.join(unknown)
 
     unique_job_name = args.main_file + argv
     os.environ['MASTER_PORT'] = str(args.port)
