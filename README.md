@@ -43,7 +43,7 @@
 🚩 **News** (Oct 2024): [Time-300B](https://huggingface.co/datasets/Maple728/Time-300B) dataset is now available 
 on 🤗 Hugging Face
 
-🚩 **News** (Oct 2024): [Time-MoE (base)](https://huggingface.co/Maple728/TimeMoE-200M) and [Time-MoE (large)](https://huggingface.co/Maple728/TimeMoE-200M) are made available
+🚩 **News** (Oct 2024): [Time-MoE (base)](https://huggingface.co/Maple728/TimeMoE-50M) and [Time-MoE (large)](https://huggingface.co/Maple728/TimeMoE-200M) are made available
 on 🤗 Hugging Face
 
 🚩 **News** (Sept 2024): Time-MoE preprint has been made available on [arXiv](https://arxiv.org/pdf/2409.16040)
