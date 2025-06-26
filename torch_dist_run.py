@@ -98,12 +98,21 @@ if __name__ == '__main__':
         type=int,
         help='Port to use for distributed training'
     )
+    parser.add_argument(
+        '--cuda_devices', '-c',
+        default=None,
+        type=str,
+        help='CUDA devices to use, e.g., "0,1,2"'
+    )
 
     args, unknown = parser.parse_known_args()
     argv = ' '.join(unknown)
 
     unique_job_name = args.main_file + argv
     os.environ['MASTER_PORT'] = str(args.port)
+
+    if args.cuda_devices:
+        os.environ['CUDA_VISIBLE_DEVICES'] = args.cuda_devices
 
     auto_dist_run(
         main_file=args.main_file,
