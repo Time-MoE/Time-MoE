@@ -1,15 +1,23 @@
 import math
+import datetime
 from typing import Optional, Tuple, List, Union
 import warnings
-
+import numpy as np
 import torch
 from torch import nn
 import torch.nn.functional as F
 from transformers import PreTrainedModel, Cache, DynamicCache, StaticCache
 from transformers.activations import ACT2FN
 from transformers.modeling_attn_mask_utils import _prepare_4d_causal_attention_mask
-from transformers.modeling_outputs import MoeModelOutputWithPast, MoeCausalLMOutputWithPast
-from transformers.utils import logging, is_flash_attn_2_available, is_flash_attn_greater_or_equal_2_10
+from transformers.modeling_outputs import (
+    MoeModelOutputWithPast,
+    MoeCausalLMOutputWithPast,
+)
+from transformers.utils import (
+    logging,
+    is_flash_attn_2_available,
+    is_flash_attn_greater_or_equal_2_10,
+)
 
 from .configuration_time_moe import TimeMoeConfig
 from .ts_generation_mixin import TSGenerationMixin
@@ -39,10 +47,10 @@ def _get_unpad_data(attention_mask):
 
 
 def load_balancing_loss_func(
-        gate_logits: Union[torch.Tensor, Tuple[torch.Tensor], List[torch.Tensor]],
-        top_k: int,
-        num_experts: int = None,
-        attention_mask: Optional[torch.Tensor] = None
+    gate_logits: Union[torch.Tensor, Tuple[torch.Tensor], List[torch.Tensor]],
+    top_k: int,
+    num_experts: int = None,
+    attention_mask: Optional[torch.Tensor] = None,
 ) -> torch.Tensor:
     r"""
     Computes auxiliary load balancing loss as in Switch Transformer - implemented in Pytorch.
@@ -66,11 +74,17 @@ def load_balancing_loss_func(
     Returns:
         The auxiliary loss.
     """
-    if gate_logits is None or not isinstance(gate_logits, (tuple, list)) or gate_logits[0] is None:
+    if (
+        gate_logits is None
+        or not isinstance(gate_logits, (tuple, list))
+        or gate_logits[0] is None
+    ):
         return 0.0
 
     compute_device = gate_logits[0].device
-    concatenated_gate_logits = torch.cat([layer_gate.to(compute_device) for layer_gate in gate_logits], dim=0)
+    concatenated_gate_logits = torch.cat(
+        [layer_gate.to(compute_device) for layer_gate in gate_logits], dim=0
+    )
 
     routing_weights = torch.nn.functional.softmax(concatenated_gate_logits, dim=-1)
 
@@ -86,7 +100,9 @@ def load_balancing_loss_func(
         router_prob_per_expert = torch.mean(routing_weights, dim=0)
     else:
         batch_size, sequence_length = attention_mask.shape
-        num_hidden_layers = concatenated_gate_logits.shape[0] // (batch_size * sequence_length)
+        num_hidden_layers = concatenated_gate_logits.shape[0] // (
+            batch_size * sequence_length
+        )
 
         # Compute the mask that masks all padding tokens as 0 with the same shape of expert_mask
         expert_attention_mask = (
@@ -97,9 +113,9 @@ def load_balancing_loss_func(
         )
 
         # Compute the percentage of tokens routed to each experts
-        tokens_per_expert = torch.sum(expert_mask.float() * expert_attention_mask, dim=0) / torch.sum(
-            expert_attention_mask, dim=0
-        )
+        tokens_per_expert = torch.sum(
+            expert_mask.float() * expert_attention_mask, dim=0
+        ) / torch.sum(expert_attention_mask, dim=0)
 
         # Compute the mask that masks all padding tokens as 0 with the same shape of tokens_per_expert
         router_per_expert_attention_mask = (
@@ -110,11 +126,13 @@ def load_balancing_loss_func(
         )
 
         # Compute the average probability of routing to these experts
-        router_prob_per_expert = torch.sum(routing_weights * router_per_expert_attention_mask, dim=0) / torch.sum(
-            router_per_expert_attention_mask, dim=0
-        )
+        router_prob_per_expert = torch.sum(
+            routing_weights * router_per_expert_attention_mask, dim=0
+        ) / torch.sum(router_per_expert_attention_mask, dim=0)
 
-    overall_loss = torch.sum(tokens_per_expert * router_prob_per_expert.unsqueeze(dim=0))
+    overall_loss = torch.sum(
+        tokens_per_expert * router_prob_per_expert.unsqueeze(dim=0)
+    )
 
     return overall_loss * num_experts
 
@@ -128,7 +146,9 @@ def repeat_kv(hidden_states: torch.Tensor, n_rep: int) -> torch.Tensor:
     batch, num_key_value_heads, slen, head_dim = hidden_states.shape
     if n_rep == 1:
         return hidden_states
-    hidden_states = hidden_states[:, :, None, :, :].expand(batch, num_key_value_heads, n_rep, slen, head_dim)
+    hidden_states = hidden_states[:, :, None, :, :].expand(
+        batch, num_key_value_heads, n_rep, slen, head_dim
+    )
     return hidden_states.reshape(batch, num_key_value_heads * n_rep, slen, head_dim)
 
 
@@ -136,7 +156,7 @@ def repeat_kv(hidden_states: torch.Tensor, n_rep: int) -> torch.Tensor:
 def rotate_half(x):
     """Rotates half the hidden dims of the input."""
     x1 = x[..., : x.shape[-1] // 2]
-    x2 = x[..., x.shape[-1] // 2:]
+    x2 = x[..., x.shape[-1] // 2 :]
     return torch.cat((-x2, x1), dim=-1)
 
 
@@ -196,17 +216,27 @@ class TimeMoeRotaryEmbedding(torch.nn.Module):
         self.dim = dim
         self.max_position_embeddings = max_position_embeddings
         self.base = base
-        inv_freq = 1.0 / (self.base ** (torch.arange(0, self.dim, 2, dtype=torch.int64).float().to(device) / self.dim))
+        inv_freq = 1.0 / (
+            self.base
+            ** (
+                torch.arange(0, self.dim, 2, dtype=torch.int64).float().to(device)
+                / self.dim
+            )
+        )
         self.register_buffer("inv_freq", inv_freq, persistent=False)
 
         # Build here to make `torch.jit.trace` work.
         self._set_cos_sin_cache(
-            seq_len=max_position_embeddings, device=self.inv_freq.device, dtype=torch.get_default_dtype()
+            seq_len=max_position_embeddings,
+            device=self.inv_freq.device,
+            dtype=torch.get_default_dtype(),
         )
 
     def _set_cos_sin_cache(self, seq_len, device, dtype):
         self.max_seq_len_cached = seq_len
-        t = torch.arange(self.max_seq_len_cached, device=device, dtype=torch.int64).type_as(self.inv_freq)
+        t = torch.arange(
+            self.max_seq_len_cached, device=device, dtype=torch.int64
+        ).type_as(self.inv_freq)
 
         freqs = torch.outer(t, self.inv_freq)
         # Different from paper, but it uses a different permutation in order to obtain the same calculation
@@ -251,7 +281,9 @@ class TimeMoeTemporalBlock(nn.Module):
         self.act_fn = ACT2FN[hidden_act]
 
     def forward(self, hidden_state):
-        return self.down_proj(self.act_fn(self.gate_proj(hidden_state)) * self.up_proj(hidden_state))
+        return self.down_proj(
+            self.act_fn(self.gate_proj(hidden_state)) * self.up_proj(hidden_state)
+        )
 
 
 class TimeMoeMLP(TimeMoeTemporalBlock):
@@ -276,11 +308,14 @@ class TimeMoeSparseExpertsLayer(nn.Module):
         # gating
         self.gate = nn.Linear(config.hidden_size, config.num_experts, bias=False)
         self.experts = nn.ModuleList(
-            [TimeMoeTemporalBlock(
-                hidden_size=self.config.hidden_size,
-                intermediate_size=moe_intermediate_size,
-                hidden_act=self.config.hidden_act,
-            ) for _ in range(self.num_experts)]
+            [
+                TimeMoeTemporalBlock(
+                    hidden_size=self.config.hidden_size,
+                    intermediate_size=moe_intermediate_size,
+                    hidden_act=self.config.hidden_act,
+                )
+                for _ in range(self.num_experts)
+            ]
         )
 
         self.shared_expert = TimeMoeTemporalBlock(
@@ -298,19 +333,25 @@ class TimeMoeSparseExpertsLayer(nn.Module):
         router_logits = self.gate(hidden_states)
 
         routing_weights = F.softmax(router_logits, dim=1, dtype=torch.float)
-        routing_weights, selected_experts = torch.topk(routing_weights, self.top_k, dim=-1)
+        routing_weights, selected_experts = torch.topk(
+            routing_weights, self.top_k, dim=-1
+        )
         if self.norm_topk_prob:
             routing_weights /= routing_weights.sum(dim=-1, keepdim=True)
         # we cast back to the input dtype
         routing_weights = routing_weights.to(hidden_states.dtype)
 
         final_hidden_states = torch.zeros(
-            (batch_size * sequence_length, hidden_dim), dtype=hidden_states.dtype, device=hidden_states.device
+            (batch_size * sequence_length, hidden_dim),
+            dtype=hidden_states.dtype,
+            device=hidden_states.device,
         )
 
         # One hot encode the selected experts to create an expert mask
         # this will be used to easily index which expert is going to be sollicitated
-        expert_mask = torch.nn.functional.one_hot(selected_experts, num_classes=self.num_experts).permute(2, 1, 0)
+        expert_mask = torch.nn.functional.one_hot(
+            selected_experts, num_classes=self.num_experts
+        ).permute(2, 1, 0)
 
         # Loop over all available experts in the model and perform the computation on each expert
         for expert_idx in range(self.num_experts):
@@ -321,18 +362,26 @@ class TimeMoeSparseExpertsLayer(nn.Module):
             # the current expert. We need to make sure to multiply the output hidden
             # states by `routing_weights` on the corresponding tokens (top-1 and top-2)
             current_state = hidden_states[None, top_x].reshape(-1, hidden_dim)
-            current_hidden_states = expert_layer(current_state) * routing_weights[top_x, idx, None]
+            current_hidden_states = (
+                expert_layer(current_state) * routing_weights[top_x, idx, None]
+            )
 
             # However `index_add_` only support torch tensors for indexing so we'll use
             # the `top_x` tensor here.
-            final_hidden_states.index_add_(0, top_x, current_hidden_states.to(hidden_states.dtype))
+            final_hidden_states.index_add_(
+                0, top_x, current_hidden_states.to(hidden_states.dtype)
+            )
 
         shared_expert_output = self.shared_expert(hidden_states)
-        shared_expert_output = F.sigmoid(self.shared_expert_gate(hidden_states)) * shared_expert_output
+        shared_expert_output = (
+            F.sigmoid(self.shared_expert_gate(hidden_states)) * shared_expert_output
+        )
 
         final_hidden_states = final_hidden_states + shared_expert_output
 
-        final_hidden_states = final_hidden_states.reshape(batch_size, sequence_length, hidden_dim)
+        final_hidden_states = final_hidden_states.reshape(
+            batch_size, sequence_length, hidden_dim
+        )
         return final_hidden_states, router_logits
 
 
@@ -369,10 +418,18 @@ class TimeMoeAttention(nn.Module):
                 f"hidden_size must be divisible by num_heads (got `hidden_size`: {self.hidden_size}"
                 f" and `num_heads`: {self.num_heads})."
             )
-        self.q_proj = nn.Linear(self.hidden_size, self.num_heads * self.head_dim, bias=True)
-        self.k_proj = nn.Linear(self.hidden_size, self.num_key_value_heads * self.head_dim, bias=True)
-        self.v_proj = nn.Linear(self.hidden_size, self.num_key_value_heads * self.head_dim, bias=True)
-        self.o_proj = nn.Linear(self.num_heads * self.head_dim, self.hidden_size, bias=False)
+        self.q_proj = nn.Linear(
+            self.hidden_size, self.num_heads * self.head_dim, bias=True
+        )
+        self.k_proj = nn.Linear(
+            self.hidden_size, self.num_key_value_heads * self.head_dim, bias=True
+        )
+        self.v_proj = nn.Linear(
+            self.hidden_size, self.num_key_value_heads * self.head_dim, bias=True
+        )
+        self.o_proj = nn.Linear(
+            self.num_heads * self.head_dim, self.hidden_size, bias=False
+        )
 
         self.rotary_emb = TimeMoeRotaryEmbedding(
             self.head_dim,
@@ -381,13 +438,13 @@ class TimeMoeAttention(nn.Module):
         )
 
     def forward(
-            self,
-            hidden_states: torch.Tensor,
-            attention_mask: Optional[torch.Tensor] = None,
-            position_ids: Optional[torch.LongTensor] = None,
-            past_key_value: Optional[Cache] = None,
-            output_attentions: bool = False,
-            **kwargs,
+        self,
+        hidden_states: torch.Tensor,
+        attention_mask: Optional[torch.Tensor] = None,
+        position_ids: Optional[torch.LongTensor] = None,
+        past_key_value: Optional[Cache] = None,
+        output_attentions: bool = False,
+        **kwargs,
     ) -> Tuple[torch.Tensor, Optional[torch.Tensor], Optional[Tuple[torch.Tensor]]]:
         if "padding_mask" in kwargs:
             warnings.warn(
@@ -399,9 +456,15 @@ class TimeMoeAttention(nn.Module):
         key_states = self.k_proj(hidden_states)
         value_states = self.v_proj(hidden_states)
 
-        query_states = query_states.view(bsz, q_len, self.num_heads, self.head_dim).transpose(1, 2)
-        key_states = key_states.view(bsz, q_len, self.num_key_value_heads, self.head_dim).transpose(1, 2)
-        value_states = value_states.view(bsz, q_len, self.num_key_value_heads, self.head_dim).transpose(1, 2)
+        query_states = query_states.view(
+            bsz, q_len, self.num_heads, self.head_dim
+        ).transpose(1, 2)
+        key_states = key_states.view(
+            bsz, q_len, self.num_key_value_heads, self.head_dim
+        ).transpose(1, 2)
+        value_states = value_states.view(
+            bsz, q_len, self.num_key_value_heads, self.head_dim
+        ).transpose(1, 2)
 
         kv_seq_len = key_states.shape[-2]
         if past_key_value is not None:
@@ -413,17 +476,23 @@ class TimeMoeAttention(nn.Module):
                 )
             kv_seq_len += past_key_value.get_usable_length(kv_seq_len, self.layer_idx)
         cos, sin = self.rotary_emb(value_states, seq_len=kv_seq_len)
-        query_states, key_states = apply_rotary_pos_emb(query_states, key_states, cos, sin, position_ids)
+        query_states, key_states = apply_rotary_pos_emb(
+            query_states, key_states, cos, sin, position_ids
+        )
 
         if past_key_value is not None:
             cache_kwargs = {"sin": sin, "cos": cos}  # Specific to RoPE models
-            key_states, value_states = past_key_value.update(key_states, value_states, self.layer_idx, cache_kwargs)
+            key_states, value_states = past_key_value.update(
+                key_states, value_states, self.layer_idx, cache_kwargs
+            )
 
         # repeat k/v heads if n_kv_heads < n_heads
         key_states = repeat_kv(key_states, self.num_key_value_groups)
         value_states = repeat_kv(value_states, self.num_key_value_groups)
 
-        attn_weights = torch.matmul(query_states, key_states.transpose(2, 3)) / math.sqrt(self.head_dim)
+        attn_weights = torch.matmul(
+            query_states, key_states.transpose(2, 3)
+        ) / math.sqrt(self.head_dim)
 
         if attn_weights.size() != (bsz, self.num_heads, q_len, kv_seq_len):
             raise ValueError(
@@ -440,8 +509,12 @@ class TimeMoeAttention(nn.Module):
             attn_weights = attn_weights + attention_mask
 
         # upcast attention to fp32
-        attn_weights = nn.functional.softmax(attn_weights, dim=-1, dtype=torch.float32).to(query_states.dtype)
-        attn_weights = nn.functional.dropout(attn_weights, p=self.attention_dropout, training=self.training)
+        attn_weights = nn.functional.softmax(
+            attn_weights, dim=-1, dtype=torch.float32
+        ).to(query_states.dtype)
+        attn_weights = nn.functional.dropout(
+            attn_weights, p=self.attention_dropout, training=self.training
+        )
         attn_output = torch.matmul(attn_weights, value_states)
 
         if attn_output.size() != (bsz, self.num_heads, q_len, self.head_dim):
@@ -462,20 +535,19 @@ class TimeMoeAttention(nn.Module):
 
 
 class TimeMoeFlashAttention2(TimeMoeAttention):
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._flash_attn_uses_top_left_mask = not is_flash_attn_greater_or_equal_2_10()
 
     def forward(
-            self,
-            hidden_states: torch.Tensor,
-            attention_mask: Optional[torch.LongTensor] = None,
-            position_ids: Optional[torch.LongTensor] = None,
-            past_key_value: Optional[Cache] = None,
-            output_attentions: bool = False,
-            use_cache: bool = False,
-            cache_position: Optional[torch.LongTensor] = None,
+        self,
+        hidden_states: torch.Tensor,
+        attention_mask: Optional[torch.LongTensor] = None,
+        position_ids: Optional[torch.LongTensor] = None,
+        past_key_value: Optional[Cache] = None,
+        output_attentions: bool = False,
+        use_cache: bool = False,
+        cache_position: Optional[torch.LongTensor] = None,
     ) -> Tuple[torch.Tensor, Optional[torch.Tensor], Optional[Tuple[torch.Tensor]]]:
         if isinstance(past_key_value, StaticCache):
             raise ValueError(
@@ -494,9 +566,15 @@ class TimeMoeFlashAttention2(TimeMoeAttention):
         # Flash attention requires the input to have the shape
         # batch_size x seq_length x head_dim x hidden_dim
         # therefore we just need to keep the original shape
-        query_states = query_states.view(bsz, q_len, self.num_heads, self.head_dim).transpose(1, 2)
-        key_states = key_states.view(bsz, q_len, self.num_key_value_heads, self.head_dim).transpose(1, 2)
-        value_states = value_states.view(bsz, q_len, self.num_key_value_heads, self.head_dim).transpose(1, 2)
+        query_states = query_states.view(
+            bsz, q_len, self.num_heads, self.head_dim
+        ).transpose(1, 2)
+        key_states = key_states.view(
+            bsz, q_len, self.num_key_value_heads, self.head_dim
+        ).transpose(1, 2)
+        value_states = value_states.view(
+            bsz, q_len, self.num_key_value_heads, self.head_dim
+        ).transpose(1, 2)
 
         kv_seq_len = key_states.shape[-2]
         if past_key_value is not None:
@@ -509,12 +587,16 @@ class TimeMoeFlashAttention2(TimeMoeAttention):
             kv_seq_len += past_key_value.get_usable_length(kv_seq_len, self.layer_idx)
         rotary_seq_len = max(kv_seq_len, position_ids[:, -1].max().item()) + 1
         cos, sin = self.rotary_emb(value_states, seq_len=rotary_seq_len)
-        query_states, key_states = apply_rotary_pos_emb(query_states, key_states, cos, sin, position_ids)
+        query_states, key_states = apply_rotary_pos_emb(
+            query_states, key_states, cos, sin, position_ids
+        )
 
         if past_key_value is not None:
             # sin and cos are specific to RoPE models; cache_position needed for the static cache
             cache_kwargs = {"sin": sin, "cos": cos, "cache_position": cache_position}
-            key_states, value_states = past_key_value.update(key_states, value_states, self.layer_idx, cache_kwargs)
+            key_states, value_states = past_key_value.update(
+                key_states, value_states, self.layer_idx, cache_kwargs
+            )
 
         # TODO: These transpose are quite inefficient but Flash Attention requires the layout [batch_size, sequence_length, num_heads, head_dim]. We would need to refactor the KV cache
         # to be able to avoid many of these transpose/reshape/view.
@@ -532,7 +614,6 @@ class TimeMoeFlashAttention2(TimeMoeAttention):
 
         input_dtype = query_states.dtype
         if input_dtype == torch.float32:
-
             if torch.is_autocast_enabled():
                 target_dtype = torch.get_autocast_gpu_dtype()
             # Handle the case where the model is quantized
@@ -552,7 +633,12 @@ class TimeMoeFlashAttention2(TimeMoeAttention):
             value_states = value_states.to(target_dtype)
 
         attn_output = self._flash_attention_forward(
-            query_states, key_states, value_states, attention_mask, q_len, dropout=dropout_rate
+            query_states,
+            key_states,
+            value_states,
+            attention_mask,
+            q_len,
+            dropout=dropout_rate,
         )
 
         attn_output = attn_output.reshape(bsz, q_len, -1).contiguous()
@@ -564,7 +650,14 @@ class TimeMoeFlashAttention2(TimeMoeAttention):
         return attn_output, attn_weights, past_key_value
 
     def _flash_attention_forward(
-            self, query_states, key_states, value_states, attention_mask, query_length, dropout=0.0, softmax_scale=None
+        self,
+        query_states,
+        key_states,
+        value_states,
+        attention_mask,
+        query_length,
+        dropout=0.0,
+        softmax_scale=None,
     ):
         """
         Calls the forward method of Flash Attention - if the input hidden states contain at least one padding token
@@ -604,26 +697,31 @@ class TimeMoeFlashAttention2(TimeMoeAttention):
             value_states,
             dropout,
             softmax_scale=softmax_scale,
-            causal=causal
+            causal=causal,
         )
         if origin_dtype not in [torch.bfloat16, torch.float16]:
             return attn_output.to(origin_dtype)
         else:
             return attn_output
 
-    def _upad_input(self, query_layer, key_layer, value_layer, attention_mask, query_length):
+    def _upad_input(
+        self, query_layer, key_layer, value_layer, attention_mask, query_length
+    ):
         indices_k, cu_seqlens_k, max_seqlen_in_batch_k = _get_unpad_data(attention_mask)
         batch_size, kv_seq_len, num_key_value_heads, head_dim = key_layer.shape
 
         key_layer = index_first_axis(
-            key_layer.reshape(batch_size * kv_seq_len, num_key_value_heads, head_dim), indices_k
+            key_layer.reshape(batch_size * kv_seq_len, num_key_value_heads, head_dim),
+            indices_k,
         )
         value_layer = index_first_axis(
-            value_layer.reshape(batch_size * kv_seq_len, num_key_value_heads, head_dim), indices_k
+            value_layer.reshape(batch_size * kv_seq_len, num_key_value_heads, head_dim),
+            indices_k,
         )
         if query_length == kv_seq_len:
             query_layer = index_first_axis(
-                query_layer.reshape(batch_size * kv_seq_len, self.num_heads, head_dim), indices_k
+                query_layer.reshape(batch_size * kv_seq_len, self.num_heads, head_dim),
+                indices_k,
             )
             cu_seqlens_q = cu_seqlens_k
             max_seqlen_in_batch_q = max_seqlen_in_batch_k
@@ -638,7 +736,9 @@ class TimeMoeFlashAttention2(TimeMoeAttention):
         else:
             # The -q_len: slice assumes left padding.
             attention_mask = attention_mask[:, -query_length:]
-            query_layer, indices_q, cu_seqlens_q, max_seqlen_in_batch_q = unpad_input(query_layer, attention_mask)
+            query_layer, indices_q, cu_seqlens_q, max_seqlen_in_batch_q = unpad_input(
+                query_layer, attention_mask
+            )
 
         return (
             query_layer,
@@ -652,7 +752,7 @@ class TimeMoeFlashAttention2(TimeMoeAttention):
 
 TIME_MOE_ATTENTION_CLASSES = {
     "eager": TimeMoeAttention,
-    'flash_attention_2': TimeMoeFlashAttention2,
+    "flash_attention_2": TimeMoeFlashAttention2,
 }
 
 
@@ -662,7 +762,9 @@ class TimeMoeDecoderLayer(nn.Module):
         self.config = config
         self.hidden_size = config.hidden_size
 
-        self.self_attn = TIME_MOE_ATTENTION_CLASSES[config._attn_implementation](config, layer_idx)
+        self.self_attn = TIME_MOE_ATTENTION_CLASSES[config._attn_implementation](
+            config, layer_idx
+        )
 
         if self.config.use_dense:
             self.ffn_layer = TimeMoeMLP(
@@ -672,19 +774,28 @@ class TimeMoeDecoderLayer(nn.Module):
             )
         else:
             self.ffn_layer = TimeMoeSparseExpertsLayer(config)
-        self.input_layernorm = TimeMoeRMSNorm(config.hidden_size, eps=config.rms_norm_eps)
-        self.post_attention_layernorm = TimeMoeRMSNorm(config.hidden_size, eps=config.rms_norm_eps)
+        self.input_layernorm = TimeMoeRMSNorm(
+            config.hidden_size, eps=config.rms_norm_eps
+        )
+        self.post_attention_layernorm = TimeMoeRMSNorm(
+            config.hidden_size, eps=config.rms_norm_eps
+        )
 
     def forward(
-            self,
-            hidden_states: torch.Tensor,
-            attention_mask: Optional[torch.Tensor] = None,
-            position_ids: Optional[torch.LongTensor] = None,
-            past_key_value: Optional[Tuple[torch.Tensor]] = None,
-            output_attentions: Optional[bool] = False,
-            use_cache: Optional[bool] = False,
-            **kwargs,
-    ) -> Tuple[torch.FloatTensor, torch.FloatTensor, Optional[torch.FloatTensor], Optional[torch.FloatTensor]]:
+        self,
+        hidden_states: torch.Tensor,
+        attention_mask: Optional[torch.Tensor] = None,
+        position_ids: Optional[torch.LongTensor] = None,
+        past_key_value: Optional[Tuple[torch.Tensor]] = None,
+        output_attentions: Optional[bool] = False,
+        use_cache: Optional[bool] = False,
+        **kwargs,
+    ) -> Tuple[
+        torch.FloatTensor,
+        torch.FloatTensor,
+        Optional[torch.FloatTensor],
+        Optional[torch.FloatTensor],
+    ]:
         if "padding_mask" in kwargs:
             warnings.warn(
                 "Passing `padding_mask` is deprecated and will be removed in v4.37. "
@@ -767,7 +878,10 @@ class TimeMoeModel(TimeMoePreTrainedModel):
         super().__init__(config)
         self.embed_layer = TimeMoeInputEmbedding(config)
         self.layers = nn.ModuleList(
-            [TimeMoeDecoderLayer(config, layer_idx) for layer_idx in range(config.num_hidden_layers)]
+            [
+                TimeMoeDecoderLayer(config, layer_idx)
+                for layer_idx in range(config.num_hidden_layers)
+            ]
         )
         self._attn_implementation = config._attn_implementation
         self.norm = TimeMoeRMSNorm(config.hidden_size, eps=config.rms_norm_eps)
@@ -777,29 +891,39 @@ class TimeMoeModel(TimeMoePreTrainedModel):
         self.post_init()
 
     def forward(
-            self,
-            input_ids: torch.FloatTensor = None,
-            attention_mask: Optional[torch.Tensor] = None,
-            position_ids: Optional[torch.LongTensor] = None,
-            past_key_values: Optional[List[torch.FloatTensor]] = None,
-            inputs_embeds: Optional[torch.FloatTensor] = None,
-            use_cache: Optional[bool] = None,
-            output_attentions: Optional[bool] = None,
-            output_hidden_states: Optional[bool] = None,
-            return_dict: Optional[bool] = None,
+        self,
+        input_ids: torch.FloatTensor = None,
+        attention_mask: Optional[torch.Tensor] = None,
+        position_ids: Optional[torch.LongTensor] = None,
+        past_key_values: Optional[List[torch.FloatTensor]] = None,
+        inputs_embeds: Optional[torch.FloatTensor] = None,
+        use_cache: Optional[bool] = None,
+        output_attentions: Optional[bool] = None,
+        output_hidden_states: Optional[bool] = None,
+        return_dict: Optional[bool] = None,
     ) -> Union[Tuple, MoeModelOutputWithPast]:
         # input_ids is the input of time series, its shape is [batch_size, seq_len, input_size]
-        output_attentions = output_attentions if output_attentions is not None else self.config.output_attentions
+        output_attentions = (
+            output_attentions
+            if output_attentions is not None
+            else self.config.output_attentions
+        )
         output_hidden_states = (
-            output_hidden_states if output_hidden_states is not None else self.config.output_hidden_states
+            output_hidden_states
+            if output_hidden_states is not None
+            else self.config.output_hidden_states
         )
         use_cache = use_cache if use_cache is not None else self.config.use_cache
 
-        return_dict = return_dict if return_dict is not None else self.config.use_return_dict
+        return_dict = (
+            return_dict if return_dict is not None else self.config.use_return_dict
+        )
 
         # retrieve input_ids and inputs_embeds
         if input_ids is not None and inputs_embeds is not None:
-            raise ValueError("You cannot specify both decoder_input_ids and decoder_inputs_embeds at the same time")
+            raise ValueError(
+                "You cannot specify both decoder_input_ids and decoder_inputs_embeds at the same time"
+            )
         elif input_ids is not None:
             if len(input_ids.shape) == 2:
                 input_ids.unsqueeze_(dim=-1)
@@ -807,7 +931,9 @@ class TimeMoeModel(TimeMoePreTrainedModel):
         elif inputs_embeds is not None:
             batch_size, seq_length, _ = inputs_embeds.shape
         else:
-            raise ValueError("You have to specify either decoder_input_ids or decoder_inputs_embeds")
+            raise ValueError(
+                "You have to specify either decoder_input_ids or decoder_inputs_embeds"
+            )
 
         if self.gradient_checkpointing and self.training:
             if use_cache:
@@ -827,7 +953,10 @@ class TimeMoeModel(TimeMoePreTrainedModel):
         if position_ids is None:
             device = input_ids.device if input_ids is not None else inputs_embeds.device
             position_ids = torch.arange(
-                past_key_values_length, seq_length + past_key_values_length, dtype=torch.long, device=device
+                past_key_values_length,
+                seq_length + past_key_values_length,
+                dtype=torch.long,
+                device=device,
             )
             # position_ids = position_ids.unsqueeze(0).view(-1, seq_length)
             position_ids = position_ids.view(-1, seq_length)
@@ -854,7 +983,9 @@ class TimeMoeModel(TimeMoePreTrainedModel):
         all_router_logits = ()
         next_decoder_cache = None
 
-        for decoder_layer in self.layers:
+        for idx, decoder_layer in enumerate(self.layers):
+            if idx == len(self.layers) // 2:
+                mid_hidden_states = hidden_states
             if output_hidden_states:
                 all_hidden_states += (hidden_states,)
 
@@ -896,12 +1027,22 @@ class TimeMoeModel(TimeMoePreTrainedModel):
 
         next_cache = None
         if use_cache:
-            next_cache = next_decoder_cache.to_legacy_cache() if use_legacy_cache else next_decoder_cache
+            next_cache = (
+                next_decoder_cache.to_legacy_cache()
+                if use_legacy_cache
+                else next_decoder_cache
+            )
 
         if not return_dict:
             return tuple(
                 v
-                for v in [hidden_states, next_cache, all_hidden_states, all_self_attns, all_router_logits]
+                for v in [
+                    hidden_states,
+                    next_cache,
+                    all_hidden_states,
+                    all_self_attns,
+                    all_router_logits,
+                ]
                 if v is not None
             )
         return MoeModelOutputWithPast(
@@ -909,12 +1050,11 @@ class TimeMoeModel(TimeMoePreTrainedModel):
             past_key_values=next_cache,
             hidden_states=all_hidden_states,
             attentions=all_self_attns,
-            router_logits=all_router_logits
+            router_logits=all_router_logits,
         )
 
 
 class TimeMoeOutputLayer(nn.Module):
-
     def __init__(self, hidden_size: int, horizon_length: int, input_size: int = 1):
         super().__init__()
 
@@ -927,23 +1067,23 @@ class TimeMoeOutputLayer(nn.Module):
     def forward(self, x):
         """
 
-        Args:
-            x (torch.FloatTensor): with shape [B, seq_len, hidden_size]
+            Args:
+                x (torch.FloatTensor): with shape [B, seq_len, hidden_size]
 
-        Returns:
-    `       torch.FloatTensor: final prediction with shape [B, seq_len, input_size]
+            Returns:
+        `       torch.FloatTensor: final prediction with shape [B, seq_len, input_size]
         """
         return self.out_layer(x)
 
 
 class TimeMoeForPrediction(TimeMoePreTrainedModel, TSGenerationMixin):
-
     def __init__(self, config: TimeMoeConfig):
         super().__init__(config)
         self.config = config
         self.apply_aux_loss = config.apply_aux_loss
         self.num_experts_per_tok = config.num_experts_per_tok
         self.router_aux_loss_factor = config.router_aux_loss_factor
+        self.batch_id = 0
 
         self.model = TimeMoeModel(config)
         # output layer
@@ -960,7 +1100,7 @@ class TimeMoeForPrediction(TimeMoePreTrainedModel, TSGenerationMixin):
             self.horizon_length_map[horizon_length] = i
         self.lm_heads = nn.ModuleList(lm_head_list)
 
-        self.loss_function = torch.nn.HuberLoss(reduction='none', delta=2.0)
+        self.loss_function = torch.nn.HuberLoss(reduction="none", delta=2.0)
 
         # Initialize weights and apply final processing
         self.post_init()
@@ -972,26 +1112,33 @@ class TimeMoeForPrediction(TimeMoePreTrainedModel, TSGenerationMixin):
         return self.model
 
     def forward(
-            self,
-            input_ids: torch.FloatTensor = None,
-            attention_mask: Optional[torch.Tensor] = None,
-            position_ids: Optional[torch.LongTensor] = None,
-            past_key_values: Optional[List[torch.FloatTensor]] = None,
-            inputs_embeds: Optional[torch.FloatTensor] = None,
-            labels: Optional[torch.FloatTensor] = None,
-            loss_masks: Optional[torch.FloatTensor] = None,
-            use_cache: Optional[bool] = None,
-            output_attentions: Optional[bool] = None,
-            output_hidden_states: Optional[bool] = None,
-            return_dict: Optional[bool] = None,
-            max_horizon_length: Optional[int] = None,
+        self,
+        input_ids: torch.FloatTensor = None,
+        attention_mask: Optional[torch.Tensor] = None,
+        position_ids: Optional[torch.LongTensor] = None,
+        past_key_values: Optional[List[torch.FloatTensor]] = None,
+        inputs_embeds: Optional[torch.FloatTensor] = None,
+        labels: Optional[torch.FloatTensor] = None,
+        loss_masks: Optional[torch.FloatTensor] = None,
+        use_cache: Optional[bool] = None,
+        output_attentions: Optional[bool] = None,
+        output_hidden_states: Optional[bool] = None,
+        return_dict: Optional[bool] = None,
+        max_horizon_length: Optional[int] = None,
     ) -> Union[Tuple, MoeCausalLMOutputWithPast]:
-
-        output_attentions = output_attentions if output_attentions is not None else self.config.output_attentions
-        output_hidden_states = (
-            output_hidden_states if output_hidden_states is not None else self.config.output_hidden_states
+        output_attentions = (
+            output_attentions
+            if output_attentions is not None
+            else self.config.output_attentions
         )
-        return_dict = return_dict if return_dict is not None else self.config.use_return_dict
+        output_hidden_states = (
+            output_hidden_states
+            if output_hidden_states is not None
+            else self.config.output_hidden_states
+        )
+        return_dict = (
+            return_dict if return_dict is not None else self.config.use_return_dict
+        )
 
         # decoder outputs consists of (dec_features, layer_state, dec_hidden, dec_attn)
         outputs = self.model(
@@ -1007,6 +1154,23 @@ class TimeMoeForPrediction(TimeMoePreTrainedModel, TSGenerationMixin):
         )
 
         hidden_states = outputs[0]
+        all_hidden_states = outputs[2]
+        mid_hidden_states = all_hidden_states[len(all_hidden_states) // 2]
+        # TODO: CUSTOM
+        # set batch_id to zero if not defined
+
+        # timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+
+        # filename = f"/share/dean/embeddings_large_arxiv_train/output_embeddings_{self.batch_id}.npy"
+        # self.batch_id += 1
+        # # print(f"Saving embeddings with shape: {hidden_states.shape}")
+        # np.save(filename, hidden_states.detach().cpu().numpy())
+        return (
+            mid_hidden_states.detach().cpu().numpy,
+            hidden_states.detach().cpu().numpy(),
+        )
+        # TODO: END CUSTOM
+
         predictions = None
 
         loss = None
@@ -1014,9 +1178,13 @@ class TimeMoeForPrediction(TimeMoePreTrainedModel, TSGenerationMixin):
         if labels is not None:
             # AutoRegressive loss
             ar_loss = 0.0
-            for lm_head, horizon_length in zip(self.lm_heads, self.config.horizon_lengths):
+            for lm_head, horizon_length in zip(
+                self.lm_heads, self.config.horizon_lengths
+            ):
                 one_predictions = lm_head(hidden_states)
-                one_loss = self.calc_ar_loss(one_predictions, labels, loss_masks, horizon_length)
+                one_loss = self.calc_ar_loss(
+                    one_predictions, labels, loss_masks, horizon_length
+                )
                 ar_loss += one_loss
                 if predictions is None:
                     predictions = one_predictions
@@ -1029,7 +1197,7 @@ class TimeMoeForPrediction(TimeMoePreTrainedModel, TSGenerationMixin):
                     router_logits,
                     top_k=self.num_experts_per_tok,
                     num_experts=self.config.num_experts,
-                    attention_mask=attention_mask
+                    attention_mask=attention_mask,
                 )
                 loss += self.router_aux_loss_factor * temporal_aux_loss.to(loss.device)
         else:
@@ -1046,7 +1214,9 @@ class TimeMoeForPrediction(TimeMoePreTrainedModel, TSGenerationMixin):
             lm_head = self.lm_heads[self.horizon_length_map[horizon_length]]
             predictions = lm_head(hidden_states)
             if horizon_length > max_horizon_length:
-                predictions = predictions[:, :, : self.config.input_size * max_horizon_length]
+                predictions = predictions[
+                    :, :, : self.config.input_size * max_horizon_length
+                ]
 
         if not return_dict:
             output = (predictions,) + outputs[1:]
@@ -1073,11 +1243,18 @@ class TimeMoeForPrediction(TimeMoePreTrainedModel, TSGenerationMixin):
 
         if horizon_length > 1:
             batch_size, seq_len, output_size = predictions.shape
-            shift_predictions = predictions.view(batch_size, seq_len, horizon_length, -1)
+            shift_predictions = predictions.view(
+                batch_size, seq_len, horizon_length, -1
+            )
 
             # pad to the same length with predictions
             # shape -> [B, input_size, seq_len + horizon_length -1]
-            labels = F.pad(labels.transpose(-1, -2), (0, horizon_length - 1), mode='constant', value=0)
+            labels = F.pad(
+                labels.transpose(-1, -2),
+                (0, horizon_length - 1),
+                mode="constant",
+                value=0,
+            )
 
             # shape -> [B, input_size, seq_len, horizon_length]
             shift_labels = labels.unfold(dimension=-1, size=horizon_length, step=1)
@@ -1085,9 +1262,16 @@ class TimeMoeForPrediction(TimeMoePreTrainedModel, TSGenerationMixin):
 
             if loss_masks is not None:
                 # pad to the same length with predictions
-                loss_masks = F.pad(loss_masks.transpose(-1, -2), (0, horizon_length - 1), mode='constant', value=0)
+                loss_masks = F.pad(
+                    loss_masks.transpose(-1, -2),
+                    (0, horizon_length - 1),
+                    mode="constant",
+                    value=0,
+                )
 
-                loss_masks = loss_masks.unfold(dimension=-1, size=horizon_length, step=1)
+                loss_masks = loss_masks.unfold(
+                    dimension=-1, size=horizon_length, step=1
+                )
                 loss_masks = loss_masks.permute(0, 2, 3, 1)
 
         else:
@@ -1106,7 +1290,12 @@ class TimeMoeForPrediction(TimeMoePreTrainedModel, TSGenerationMixin):
         return loss
 
     def prepare_inputs_for_generation(
-            self, input_ids, past_key_values=None, attention_mask=None, inputs_embeds=None, **kwargs
+        self,
+        input_ids,
+        past_key_values=None,
+        attention_mask=None,
+        inputs_embeds=None,
+        **kwargs,
     ):
         # Omit tokens covered by past_key_values
         if past_key_values is not None:
@@ -1126,8 +1315,11 @@ class TimeMoeForPrediction(TimeMoePreTrainedModel, TSGenerationMixin):
             # 1 - If the length of the attention_mask exceeds the length of input_ids, then we are in a setting where
             # some of the inputs are exclusively passed as part of the cache (e.g. when passing input_embeds as
             # input)
-            if attention_mask is not None and attention_mask.shape[1] > input_ids.shape[1]:
-                input_ids = input_ids[:, -(attention_mask.shape[1] - past_length):]
+            if (
+                attention_mask is not None
+                and attention_mask.shape[1] > input_ids.shape[1]
+            ):
+                input_ids = input_ids[:, -(attention_mask.shape[1] - past_length) :]
             # 2 - If the past_length is smaller than input_ids', then input_ids holds all input tokens. We can discard
             # input_ids based on the past_length.
             elif past_length < input_ids.shape[1]:
@@ -1136,9 +1328,9 @@ class TimeMoeForPrediction(TimeMoePreTrainedModel, TSGenerationMixin):
 
             # If we are about to go beyond the maximum cache length, we need to crop the input attention mask.
             if (
-                    max_cache_length is not None
-                    and attention_mask is not None
-                    and cache_length + input_ids.shape[1] > max_cache_length
+                max_cache_length is not None
+                and attention_mask is not None
+                and cache_length + input_ids.shape[1] > max_cache_length
             ):
                 attention_mask = attention_mask[:, -max_cache_length:]
 
@@ -1148,11 +1340,11 @@ class TimeMoeForPrediction(TimeMoePreTrainedModel, TSGenerationMixin):
             position_ids = attention_mask.long().cumsum(-1) - 1
             position_ids.masked_fill_(attention_mask == 0, 1)
             if past_key_values:
-                position_ids = position_ids[:, -input_ids.shape[1]:]
+                position_ids = position_ids[:, -input_ids.shape[1] :]
 
         # if `inputs_embeds` are passed, we only want to use them in the 1st generation step
         if inputs_embeds is not None and past_key_values is None:
-            logger.info('Use input_embedding')
+            logger.info("Use input_embedding")
             model_inputs = {"inputs_embeds": inputs_embeds}
         else:
             model_inputs = {"input_ids": input_ids}
@@ -1172,6 +1364,9 @@ class TimeMoeForPrediction(TimeMoePreTrainedModel, TSGenerationMixin):
         reordered_past = ()
         for layer_past in past_key_values:
             reordered_past += (
-                tuple(past_state.index_select(0, beam_idx.to(past_state.device)) for past_state in layer_past),
+                tuple(
+                    past_state.index_select(0, beam_idx.to(past_state.device))
+                    for past_state in layer_past
+                ),
             )
         return reordered_past
