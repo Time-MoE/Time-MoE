@@ -1,85 +1,57 @@
 import numpy as np
-import glob
+import os
 from datasets import Dataset
-import gc
-from tqdm import tqdm
+from glob import glob
+import argparse
 
 
-def create_embeddings_dataset(embeddings_dir: str, strategy: str = "mean"):
+def create_dataset_from_batches(path, batch_count):
     """
-    Create HuggingFace Dataset where each item is a single embedding.
-    Each of the 128 embeddings from each .npy file becomes one dataset item.
+    Create HF dataset from saved batch files.
+    Each row represents one sample from the batches.
     """
-    embedding_files = sorted(glob.glob(f"{embeddings_dir}/output_embeddings_*.npy"))
 
-    def generate_individual_embeddings():
-        """Generator that yields one embedding at a time"""
-        global_idx = 0
+    def batch_generator():
+        """Generator that yields one row at a time for memory efficiency"""
+        for batch_idx in range(batch_count):
+            # Load all arrays for this batch
+            mid_hs_mean = np.load(f"{path}/mid_hs_mean_{batch_idx}.npy")
+            final_hs_mean = np.load(f"{path}/final_hs_mean_{batch_idx}.npy")
+            mid_hs_max = np.load(f"{path}/mid_hs_max_{batch_idx}.npy")
+            final_hs_max = np.load(f"{path}/final_hs_max_{batch_idx}.npy")
+            mid_hs_last = np.load(f"{path}/mid_hs_last_{batch_idx}.npy")
+            final_hs_last = np.load(f"{path}/final_hs_last_{batch_idx}.npy")
+            orig_labels = np.load(f"{path}/orig_labels_{batch_idx}.npy")
 
-        for file_idx, file_path in enumerate(tqdm(embedding_files)):
-            print(f"Processing file {file_idx + 1}/{len(embedding_files)}")
-
-            embeddings = np.load(file_path)  # Shape: (128, 730, 768)
-
-            # Process each of the 128 embeddings individually
-            for sample_idx in range(embeddings.shape[0]):  # Loop through 128 samples
-                single_embedding = embeddings[sample_idx]  # Shape: (730, 768)
-
-                # Apply pooling strategy to this single embedding
-                if strategy == "last":
-                    pooled = single_embedding[-1, :]  # Shape: (768,)
-                elif strategy == "mean":
-                    pooled = single_embedding.mean(axis=0)  # Shape: (768,)
-                elif strategy == "max":
-                    pooled = single_embedding.max(axis=0)  # Shape: (768,)
-                else:
-                    raise ValueError(f"Unknown strategy: {strategy}")
-
+            # Yield each sample in the batch as a separate row
+            batch_size = len(mid_hs_mean)
+            for i in range(batch_size):
                 yield {
-                    "id": global_idx,
-                    "batch_idx": file_idx,
-                    "sample_idx": sample_idx,
-                    "embedding": pooled.tolist(),  # Convert to list for serialization
+                    "mid_hs_mean": mid_hs_mean[i],
+                    "final_hs_mean": final_hs_mean[i],
+                    "mid_hs_max": mid_hs_max[i],
+                    "final_hs_max": final_hs_max[i],
+                    "mid_hs_last": mid_hs_last[i],
+                    "final_hs_last": final_hs_last[i],
+                    "orig_labels": orig_labels[i],
                 }
-                global_idx += 1
 
-            # Clean up after each file
-            del embeddings
-            gc.collect()
-
-    # Create dataset from generator
-    dataset = Dataset.from_generator(generate_individual_embeddings)
-    return dataset
+    return Dataset.from_generator(batch_generator)
 
 
-# Usage example:
+def create_dataset_auto(path):
+    """Auto-detect number of batches from files"""
+    batch_files = glob(f"{path}/mid_hs_mean_*.npy")
+    batch_count = len(batch_files)
+    return create_dataset_from_batches(path, batch_count)
+
+
 if __name__ == "__main__":
-    train_path = "/share/dean/embeddings_large_arxiv_train"
-    test_path = "/share/dean/embeddings_large_arxiv"
-    for path in [train_path, test_path]:
-        print(f"Creating datasets for path: {path}")
-        # Create dataset where each item is one embedding
-        for strategy in ["last", "mean", "max"]:
-            print(f"Creating dataset with strategy: {strategy}")
-            dataset = create_embeddings_dataset(path, strategy=strategy)
-            dataset.save_to_disk(f"{train_path}/embed_{strategy}")
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--path", type=str, default="/share/dean/embeds/")
 
-            # Use the dataset
-            print(f"Dataset size: {len(dataset)}")
-            print(
-                f"Each file has 128 embeddings, so total = {len(dataset)} individual embeddings"
-            )
-            print(f"First sample: {dataset[0]}")
-            print(f"Embedding shape: {len(dataset[0]['embedding'])}")
-
-            # Access individual embeddings
-            first_embedding = np.array(dataset[0]["embedding"])
-            print(f"First embedding as numpy array shape: {first_embedding.shape}")
-
-            # Batch access for training
-            batch_embeddings = np.array([dataset[i]["embedding"] for i in range(32)])
-            print(f"Batch of 32 embeddings shape: {batch_embeddings.shape}")
-
-            # Filter by batch if needed
-            batch_0_items = dataset.filter(lambda x: x["batch_idx"] == 0)
-            print(f"Items from first batch file: {len(batch_0_items)}")  # Should be 128
+    args = parser.parse_args()
+    train_dataset = create_dataset_auto(args.path + "_train")
+    train_dataset.save_to_disk(args.path + "_train_ds")
+    test_dataset = create_dataset_auto(args.path + "_test")
+    test_dataset.save_to_disk(args.path + "_test_ds")
