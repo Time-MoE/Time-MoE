@@ -11,6 +11,7 @@ import torch
 from transformers import AutoModelForCausalLM
 from torch.utils.data import DataLoader
 from tqdm import tqdm
+import os
 
 
 def get_argparser():
@@ -31,6 +32,9 @@ def get_argparser():
     parser.add_argument("--batch_size", type=int, default=128, help="Batch size")
     parser.add_argument("--ablation", default=False, action="store_true")
     parser.add_argument("--ablation_name", default="accesses", type=str)
+    parser.add_argument(
+        "--output_dir", default="/share/dean/embeddings_large_arxiv_accesses", type=str
+    )
     return parser
 
 
@@ -73,21 +77,36 @@ def main(args):
         ablation_name=args.ablation_name,
     )
 
-    train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=False)
+    train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True)
+    test_loader = DataLoader(test_dataset, batch_size=args.batch_size, shuffle=False)
 
     model = TimeMoeForPrediction.from_pretrained(
         "Maple728/TimeMoE-200M",
         device_map="cuda",  # use "cpu" for CPU inference, and "cuda" for GPU inference.
         trust_remote_code=True,
     )
-    prediction_length = 1
-    with torch.no_grad():
-        for idx, batch in enumerate(tqdm(train_loader)):
-            inputs, labels, orig_labels = batch
-            inputs = inputs.to("cuda")
-            output = model.generate(inputs, max_new_tokens=prediction_length)
-            # print(f"labeles: {labels}, orig_labels: {orig_labels}, output: {output} ")
-        print(idx, "batches processed")
+    train_path = args.output_dir + "_train"
+    test_path = args.output_dir + "_test"
+    os.makedirs(train_path, exist_ok=True)
+    os.makedirs(test_path, exist_ok=True)
+    for loader, path in [(train_loader, train_path), (test_loader, test_path)]:
+        print(f"Generating embeddings and saving to {path}")
+        with torch.no_grad():
+            for batch_idx, batch in enumerate(tqdm(loader)):
+                inputs, labels, orig_labels = batch
+                inputs = inputs.to("cuda")
+                mid_hs, final_hs = model(inputs)
+                np.save(f"{path}/mid_hs_mean_{batch_idx}.npy", mid_hs.mean(axis=1))
+                np.save(f"{path}/final_hs_mean_{batch_idx}.npy", final_hs.mean(axis=1))
+                np.save(f"{path}/mid_hs_max_{batch_idx}.npy", mid_hs.max(axis=1))
+                np.save(f"{path}/final_hs_max_{batch_idx}.npy", final_hs.max(axis=1))
+                np.save(f"{path}/mid_hs_last_{batch_idx}.npy", mid_hs[:, -1, :])
+                np.save(f"{path}/final_hs_last_{batch_idx}.npy", final_hs[:, -1, :])
+                np.save(
+                    f"{path}/orig_labels_{batch_idx}.npy",
+                    orig_labels.cpu().numpy(),
+                )
+            print(batch_idx + 1, "batches processed")
 
 
 if __name__ == "__main__":

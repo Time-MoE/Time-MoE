@@ -1048,7 +1048,7 @@ class TimeMoeModel(TimeMoePreTrainedModel):
         return MoeModelOutputWithPast(
             last_hidden_state=hidden_states,
             past_key_values=next_cache,
-            hidden_states=all_hidden_states,
+            hidden_states=mid_hidden_states,
             attentions=all_self_attns,
             router_logits=all_router_logits,
         )
@@ -1154,8 +1154,8 @@ class TimeMoeForPrediction(TimeMoePreTrainedModel, TSGenerationMixin):
         )
 
         hidden_states = outputs[0]
-        all_hidden_states = outputs[2]
-        mid_hidden_states = all_hidden_states[len(all_hidden_states) // 2]
+        mid_hidden_states = outputs[2]
+
         # TODO: CUSTOM
         # set batch_id to zero if not defined
 
@@ -1166,7 +1166,7 @@ class TimeMoeForPrediction(TimeMoePreTrainedModel, TSGenerationMixin):
         # # print(f"Saving embeddings with shape: {hidden_states.shape}")
         # np.save(filename, hidden_states.detach().cpu().numpy())
         return (
-            mid_hidden_states.detach().cpu().numpy,
+            mid_hidden_states.detach().cpu().numpy(),
             hidden_states.detach().cpu().numpy(),
         )
         # TODO: END CUSTOM

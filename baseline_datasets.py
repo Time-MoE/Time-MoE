@@ -88,15 +88,10 @@ class GitHubDataset(Dataset):
         return len(self.labels)
 
     def __getitem__(self, idx):
-        inputs = torch.log(
-            1.0
-            + torch.from_numpy(
-                np.concatenate(
-                    [self.forks[idx], self.stars[idx], self.pushes[idx]], axis=0
-                )
-            ).float()
+        inputs = torch.from_numpy(
+            np.concatenate([self.forks[idx], self.stars[idx], self.pushes[idx]], axis=0)
         )
-        orig_label = torch.tensor(self.labels[idx]).float()
+        orig_label = torch.tensor(self.orig_labels[idx]).float()
         label = self.labels[idx]
         return inputs, label, orig_label
 
@@ -128,13 +123,19 @@ class ArxivDatasetAblation(Dataset):
 
 
 class GitHubDatasetAblation(Dataset):
-    def __init__(self, root, split, input_horizon, ablation_name="forks"):
+    def __init__(self, root, split, input_horizon, ablation_name=["forks"]):
         self.root = root
         self.split = split
         ds = load_from_disk(osp.join(root, split))
         self.ablation_name = ablation_name
-        self.inputs = ds[f"{ablation_name}_inputs"][:, :input_horizon]
-        self.inputs = torch.log(1.0 + torch.from_numpy(self.inputs).float())
+        input_arrays = []
+        for name in ablation_name:
+            arr = ds[f"{name}_inputs"][:, :input_horizon]
+            arr = torch.log(1.0 + torch.from_numpy(arr).float())
+            input_arrays.append(arr)
+
+        self.inputs = torch.cat(input_arrays, dim=-1)
+
         self.orig_labels = ds["forks_labels"]
         self.labels = torch.log(1.0 + torch.from_numpy(self.orig_labels).float())
         scaler = TorchStandardScaler()
