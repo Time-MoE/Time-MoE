@@ -65,7 +65,6 @@ class GitHubDataset(Dataset):
         self.root = root
         self.split = split
         ds = load_from_disk(osp.join(root, split))
-        ds.set_format("numpy")
         self.forks = ds["forks_inputs"][:, :input_horizon]
         self.stars = ds["watches_inputs"][:, :input_horizon]
         self.pushes = ds["pushes_inputs"][:, :input_horizon]
@@ -122,25 +121,64 @@ class ArxivDatasetAblation(Dataset):
         return inputs, label, orig_label
 
 
+# class GitHubDatasetAblation(Dataset):
+#     def __init__(self, root, split, input_horizon, ablation_name=["forks"]):
+#         self.root = root
+#         self.split = split
+#         ds = load_from_disk(osp.join(root, split))
+#         self.ablation_name = ablation_name
+#         input_arrays = []
+#         for name in ablation_name:
+#             arr = ds[f"{name}_inputs"][:, :input_horizon]
+#             arr = torch.log(1.0 + torch.from_numpy(arr).float())
+#             input_arrays.append(arr)
+
+#         self.inputs = torch.cat(input_arrays, dim=-1)
+
+#         self.orig_labels = ds["forks_labels"]
+#         self.labels = torch.log(1.0 + torch.from_numpy(self.orig_labels).float())
+#         scaler = TorchStandardScaler()
+#         self.input_mean, self.input_std = scaler.fit(self.inputs)
+#         self.inputs = (self.inputs - self.input_mean) / (self.input_std + 1e-6)
+#         self.labels_mean, self.labels_std = scaler.fit(self.labels)
+#         self.labels = (self.labels - self.labels_mean) / (self.labels_std + 1e-6)
+
+#     def __len__(self):
+#         return len(self.labels)
+
+#     def __getitem__(self, idx):
+#         inputs = self.inputs[idx]
+#         orig_label = torch.tensor(self.orig_labels[idx]).float()
+#         label = self.labels[idx]
+#         return inputs, label, orig_label
+
+
 class GitHubDatasetAblation(Dataset):
     def __init__(self, root, split, input_horizon, ablation_name=["forks"]):
         self.root = root
         self.split = split
         ds = load_from_disk(osp.join(root, split))
         self.ablation_name = ablation_name
-        input_arrays = []
+
+        # Store individual arrays instead of concatenating
+        self.input_arrays = {}
+        self.input_stats = {}
+
         for name in ablation_name:
             arr = ds[f"{name}_inputs"][:, :input_horizon]
             arr = torch.log(1.0 + torch.from_numpy(arr).float())
-            input_arrays.append(arr)
 
-        self.inputs = torch.cat(input_arrays, dim=-1)
+            # Fit scaler for this array
+            scaler = TorchStandardScaler()
+            mean, std = scaler.fit(arr)
+            normalized_arr = (arr - mean) / (std + 1e-6)
+
+            self.input_arrays[name] = normalized_arr
+            self.input_stats[name] = (mean, std)
 
         self.orig_labels = ds["forks_labels"]
         self.labels = torch.log(1.0 + torch.from_numpy(self.orig_labels).float())
         scaler = TorchStandardScaler()
-        self.input_mean, self.input_std = scaler.fit(self.inputs)
-        self.inputs = (self.inputs - self.input_mean) / (self.input_std + 1e-6)
         self.labels_mean, self.labels_std = scaler.fit(self.labels)
         self.labels = (self.labels - self.labels_mean) / (self.labels_std + 1e-6)
 
@@ -148,7 +186,11 @@ class GitHubDatasetAblation(Dataset):
         return len(self.labels)
 
     def __getitem__(self, idx):
-        inputs = self.inputs[idx]
+        input_list = []
+        for name in self.ablation_name:
+            input_list.append(self.input_arrays[name][idx])
+
+        inputs = torch.cat(input_list, dim=0)
         orig_label = torch.tensor(self.orig_labels[idx]).float()
         label = self.labels[idx]
         return inputs, label, orig_label

@@ -24,6 +24,7 @@ def logistic_regression_pytorch(
     train_dataset,
     test_dataset,
     feature_col,
+    meta_data={},
     threshold=50,
     batch_size=128,
     epochs=100,
@@ -99,28 +100,18 @@ def logistic_regression_pytorch(
         avg_loss = total_loss / len(train_loader)
         print(f"Epoch [{epoch+1}/{epochs}], Avg Loss: {avg_loss:.4f}")
         wandb.log({"train/avg_epoch_loss": avg_loss, "train/epoch": epoch + 1})
-        # Save model checkpoint
-        # checkpoint_path = os.path.join(output_dir, f"model_epoch_{epoch+1}.pt")
-        # torch.save(
-        #     {
-        #         "epoch": epoch + 1,
-        #         "model_state_dict": model.state_dict(),
-        #         "optimizer_state_dict": optimizer.state_dict(),
-        #         # 'scheduler_state_dict': scheduler.state_dict(),
-        #         "loss": avg_loss,
-        #     },
-        #     checkpoint_path,
-        # )
 
         if (epoch + 1) % 20 == 0 or epoch == epochs - 1:
-            test_metrics = eval(model, train_loader, test_loader)
+            test_metrics = eval(model, train_loader, test_loader, y_train, y_test)
             test_metrics.update({"test/epoch": epoch + 20})
-            wandb.log(test_metrics)
 
+            wandb.log(test_metrics)
+    wandb.log(meta_data)
+    wandb.finish()
     return test_metrics
 
 
-def eval(model, train_loader, test_loader, y_train, y_test):
+def eval(model, train_loader, test_loader, y_train, y_test, device="cuda"):
     # Evaluation
     model.eval()
     with torch.no_grad():
@@ -128,8 +119,7 @@ def eval(model, train_loader, test_loader, y_train, y_test):
         train_probs = []
         train_preds = []
         for batch_X, _ in train_loader:
-            if device == "cuda":
-                batch_X = batch_X.cuda()
+            batch_X = batch_X.cuda()
             outputs = model(batch_X).squeeze()
             probs = outputs.cpu().numpy()
             train_probs.extend(probs)
@@ -139,8 +129,7 @@ def eval(model, train_loader, test_loader, y_train, y_test):
         test_probs = []
         test_preds = []
         for batch_X, _ in test_loader:
-            if device == "cuda":
-                batch_X = batch_X.cuda()
+            batch_X = batch_X.cuda()
             outputs = model(batch_X).squeeze()
             probs = outputs.cpu().numpy()
             test_probs.extend(probs)
@@ -164,35 +153,51 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 print(f"Using device: {device}")
 
 # Test different feature types
-for case, threshold in zip(["arxiv_accesses", "github_pushes"], [50, 10]):
-    train_dataset = load_from_disk(path + f"_{case}_train_ds")
-    test_dataset = load_from_disk(path + f"_{case}_test_ds")
-    print(f"\nTraining for {case} dataset:")
 
-    for feature in [
-        "mid_hs_mean",
-        "final_hs_mean",
-        "mid_hs_max",
-        "final_hs_max",
-        "mid_hs_last",
-        "final_hs_last",
-    ]:
-        print(f"  Feature: {feature}")
-        results = logistic_regression_pytorch(
-            train_dataset,
-            test_dataset,
-            feature,
-            threshold=threshold,
-            batch_size=128,
-            epochs=100,
-            lr=0.001,
-            device=device,
-        )
-        print(f"    Results: {results}")
-        row = {"dataset": case, "feature": feature, "threshold": threshold, **results}
-        results_list.append(row)
+case = "github_pusheswatches"
+threshold = 10
+ih = 30
+path = f"/share/dean/embeds/embed_{case}"
+train_dataset = load_from_disk(path + f"_{case}_train_ds")
+test_dataset = load_from_disk(path + f"_{case}_test_ds")
+print(f"\nTraining for {case} dataset:")
+
+for feature in [
+    "mid_hs_mean",
+    "final_hs_mean",
+    "mid_hs_max",
+    "final_hs_max",
+    "mid_hs_last",
+    "final_hs_last",
+]:
+    meta_data = {
+        "feature": feature,
+        "horizon": ih,
+        "dataset": case,
+    }
+    print(f"  Feature: {feature}")
+    results = logistic_regression_pytorch(
+        train_dataset,
+        test_dataset,
+        feature,
+        meta_data=meta_data,
+        threshold=threshold,
+        batch_size=128,
+        epochs=100,
+        lr=0.001,
+        device=device,
+    )
+    print(f"    Results: {results}")
+    row = {
+        "dataset": case,
+        "feature": feature,
+        "threshold": threshold,
+        "horizon": ih,
+        **results,
+    }
+    results_list.append(row)
 
 df = pd.DataFrame(results_list)
-df.to_csv("pytorch_logistic_regression_results.csv", index=False)
+df.to_csv(f"pytorch_logistic_regression_results_{case}_{ih}.csv", index=False)
 
 print(f"\nSaved {len(results_list)} results to pytorch_logistic_regression_results.csv")

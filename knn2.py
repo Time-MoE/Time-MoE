@@ -33,7 +33,7 @@ def get_relative_mae(preds, gts, thresh):
 base_path = "/share/dean/embeds/"
 k = 5
 results_list = []
-ih_values = [30, 100, 365]  # input horizon values
+ihs = {30, 100, 365}  # input horizon values
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -48,8 +48,7 @@ elif case == "github":
 else:
     raise ValueError("Invalid case. Choose 'arxiv' or 'github'.")
 
-
-for ih in ih_values:
+for ih in ihs:
     if ih == 365:
         path = f"{base_path}embed_{case}"
     else:
@@ -58,6 +57,10 @@ for ih in ih_values:
     train_dataset = load_from_disk(path + "_train_ds")
     test_dataset = load_from_disk(path + "_test_ds")
     print(f"\nResults for {case} dataset (k={k}, input horizon={ih}):")
+
+    labels = np.array(train_dataset["orig_labels"]).astype(np.float32)
+
+    actual = np.array(test_dataset["orig_labels"]).astype(np.float32)
 
     for feature in [
         "mid_hs_mean",
@@ -88,14 +91,6 @@ for ih in ih_values:
         index_gpu.add(knowledge_base)  # Adding to GPU index
         _, I = index_gpu.search(test_base, k)  # Searching on GPU
 
-        if case == "github":
-            ds_train = load_from_disk(
-                "/share/dean/arxiv-data/model_dev/github_baseline_benchmarking/train"
-            )
-            labels = np.array(ds_train["forks_labels"]).astype(np.float32)
-        else:
-            labels = np.array(train_dataset["orig_labels"]).astype(np.float32)
-
         # Make predictions
         pred = []
         temp = []
@@ -110,13 +105,6 @@ for ih in ih_values:
 
         # Get actual values
         # actual = np.array(test_dataset["orig_labels"]).astype(np.float32)
-        if case == "github":
-            ds_test = load_from_disk(
-                "/share/dean/arxiv-data/model_dev/github_baseline_benchmarking/test"
-            )
-            actual = np.array(ds_test["forks_labels"]).astype(np.float32)
-        else:
-            actual = np.array(test_dataset["orig_labels"]).astype(np.float32)
 
         # Calculate metrics
         mae_log = get_mae(np.log1p(pred), np.log1p(actual))[0]
@@ -146,4 +134,4 @@ for ih in ih_values:
 # Save results
 df = pd.DataFrame(results_list)
 df.to_csv(f"faiss_knn_results_{case}.csv", index=False)
-print(f"\nSaved {len(results_list)} results to faiss_knn_results.csv")
+print(f"\nSaved {len(results_list)} results to faiss_knn_results_{case}.csv")

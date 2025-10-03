@@ -12,6 +12,7 @@ from transformers import AutoModelForCausalLM
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 import os
+import shutil
 
 
 def get_argparser():
@@ -95,8 +96,16 @@ def main(args):
     )
     train_path = args.output_dir + "_train"
     test_path = args.output_dir + "_test"
-    os.makedirs(train_path, exist_ok=True)
-    os.makedirs(test_path, exist_ok=True)
+
+    print("CAUTION: Deleting existing embedding directories if they exist!")
+    if os.path.exists(train_path):
+        shutil.rmtree(train_path, ignore_errors=True)
+    if os.path.exists(test_path):
+        shutil.rmtree(test_path, ignore_errors=True)
+
+    os.makedirs(train_path)
+    os.makedirs(test_path)
+
     for loader, path in [(train_loader, train_path), (test_loader, test_path)]:
         # loader = test_loader
         # path = test_path

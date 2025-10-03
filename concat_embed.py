@@ -61,13 +61,6 @@ def create_dataset_from_batches(path, batch_count, cleanup=True):
                     if os.path.exists(file_path):
                         os.remove(file_path)
 
-                # Optional: Print disk usage after cleanup
-                import shutil
-
-                total, used, free = shutil.disk_usage(path)
-                free_gb = free // (1024**3)
-                print(f"Free space after cleanup: {free_gb} GB")
-
     return Dataset.from_generator(batch_generator)
 
 
@@ -97,10 +90,10 @@ if __name__ == "__main__":
             print("Aborted.")
             exit(1)
 
-    # print("Processing training dataset...")
-    # train_dataset = create_dataset_auto(args.path + "_train", cleanup=cleanup)
-    # train_dataset.save_to_disk(args.path + "_train_ds")
-    # print("Training dataset saved!")
+    print("Processing training dataset...")
+    train_dataset = create_dataset_auto(args.path + "_train", cleanup=cleanup)
+    train_dataset.save_to_disk(args.path + "_train_ds")
+    print("Training dataset saved!")
 
     print("Processing test dataset...")
     test_dataset = create_dataset_auto(args.path + "_test", cleanup=cleanup)
