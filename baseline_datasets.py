@@ -52,9 +52,7 @@ class ArxivDataset(Dataset):
         return len(self.labels)
 
     def __getitem__(self, idx):
-        inputs = torch.from_numpy(
-            np.concatenate([self.citations[idx], self.accesses[idx]], axis=0)
-        )
+        inputs = torch.cat([self.citations[idx], self.accesses[idx]], dim=0)
         orig_label = torch.tensor(self.orig_labels[idx]).float()
         label = self.labels[idx]
         return inputs, label, orig_label
@@ -87,9 +85,7 @@ class GitHubDataset(Dataset):
         return len(self.labels)
 
     def __getitem__(self, idx):
-        inputs = torch.from_numpy(
-            np.concatenate([self.forks[idx], self.stars[idx], self.pushes[idx]], axis=0)
-        )
+        inputs = torch.cat([self.forks[idx], self.stars[idx], self.pushes[idx]], dim=0)
         orig_label = torch.tensor(self.orig_labels[idx]).float()
         label = self.labels[idx]
         return inputs, label, orig_label
@@ -100,6 +96,7 @@ class ArxivDatasetAblation(Dataset):
         self.root = root
         self.split = split
         ds = load_from_disk(osp.join(root, split))
+        ablation_name = ablation_name if isinstance(ablation_name, str) else ablation_name[0]
         self.ablation_name = ablation_name
         self.inputs = ds[f"{ablation_name}_input"][:, :input_horizon]
         self.inputs = torch.log(1.0 + torch.from_numpy(self.inputs).float())
@@ -158,6 +155,8 @@ class GitHubDatasetAblation(Dataset):
         self.root = root
         self.split = split
         ds = load_from_disk(osp.join(root, split))
+        if isinstance(ablation_name, str):
+            ablation_name = [ablation_name]
         self.ablation_name = ablation_name
 
         # Store individual arrays instead of concatenating
