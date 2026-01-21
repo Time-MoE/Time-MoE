@@ -1,0 +1,42 @@
+Bootstrap: docker
+From: pytorch/pytorch:2.2.2-cuda12.1-cudnn8-runtime
+
+%labels
+    Author chengjie.zheng001
+    Project WARP-MoE_26KDD
+
+%environment
+    export LC_ALL=C.UTF-8
+    export LANG=C.UTF-8
+    export PYTHONDONTWRITEBYTECODE=1
+    export PYTHONNOUSERSITE=1
+    export PIP_NO_CACHE_DIR=1
+    export PIP_DISABLE_PIP_VERSION_CHECK=1
+
+%post
+    set -eux
+
+    apt-get update && apt-get install -y --no-install-recommends \
+        git wget curl ca-certificates \
+        build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+    python -m pip install --upgrade pip setuptools wheel
+
+    # Decode requirements from build-time environment variable REQ_B64
+    echo "${REQ_B64}" | base64 -d > /tmp/requirements.txt
+    python -m pip install --no-cache-dir -r /tmp/requirements.txt
+
+    # Optional dev tools: consider removing for a "train" image
+    python -m pip install --no-cache-dir jupyterlab wandb
+
+%runscript
+    # Default behavior: open a shell
+    exec bash -lc "$@"
+
+
+
+
+#构建调用：
+#REQ_B64="$(base64 -w 0 requirements.txt)" \
+#apptainer build --fakeroot container/warp_moe.sif container/warp_moe.def

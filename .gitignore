@@ -160,3 +160,55 @@ cython_debug/
 #  and can be added to the global gitignore or merged into this file.  For a more nuclear
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 .idea/
+
+# Apptainer/Singularity artifacts
+container/*.sif
+container/*.img
+container/*.sandbox
+
+############################
+# Project-local large files
+############################
+
+# Data
+/data/
+/data/**
+
+# Caches
+/cache/
+/cache/**
+
+# Outputs
+/outputs/
+/outputs/**
+
+# Notebooks runtime
+/notebooks/.ipynb_checkpoints/
+
+# WandB
+wandb/
+wandb/**
+
+# HuggingFace (safety)
+**/.cache/huggingface/
+**/huggingface/
+
+# Temporary artifacts
+*.pt
+*.ckpt
+*.pth
+*.npy
+*.npz
+*.pkl
+*.csv
+*.parquet
+*.zip
+*.tar
+*.tar.gz
+
+############################
+# Apptainer runtime
+############################
+container/*.sif
+container/*.img
+container/*.sandbox
