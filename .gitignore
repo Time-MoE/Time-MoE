@@ -212,7 +212,7 @@ wandb/**
 container/*.sif
 container/*.img
 container/*.sandbox
-container/*.bak
+/_container_backup/
 
 ############################
 # Datasets
