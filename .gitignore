@@ -212,3 +212,10 @@ wandb/**
 container/*.sif
 container/*.img
 container/*.sandbox
+container/*.bak
+
+############################
+# Datasets
+############################
+/Time-300B
+/dataset
