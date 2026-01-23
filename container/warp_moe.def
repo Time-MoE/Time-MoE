@@ -1,5 +1,5 @@
 Bootstrap: docker
-From: pytorch/pytorch:2.2.2-cuda12.1-cudnn8-runtime
+From: pytorch/pytorch:2.2.2-cuda12.1-cudnn8-devel
 
 %labels
     Author chengjie.zheng001
@@ -35,6 +35,14 @@ From: pytorch/pytorch:2.2.2-cuda12.1-cudnn8-runtime
         datasets==2.18.0 \
         accelerate==0.28.0
 
+    # flash-attn build deps
+    python -m pip install --no-cache-dir packaging ninja einops
+
+    # flash-attn (compile from source, requires nvcc)
+    MAX_JOBS=64 python -m pip install --no-cache-dir \
+        flash-attn==2.6.3 --no-build-isolation
+
+
     # Optional dev tools (remove if you want a smaller "train-only" image)
     python -m pip install --no-cache-dir \
         jupyterlab \
@@ -60,16 +68,7 @@ From: pytorch/pytorch:2.2.2-cuda12.1-cudnn8-runtime
 ############################
 # Cotainer build & verify
 ############################
-## build
-#apptainer build --fakeroot container/warp_moe.sif container/warp_moe.def
 
-## verify
-#apptainer exec --nv container/warp_moe.sif bash -lc '
-#which python
-#python -V
-#python -c "import torch; print(torch.__version__, torch.cuda.is_available())"
-#python -c "import transformers, datasets, accelerate; print(transformers.__version__, datasets.__version__, accelerate.__version__)"
-#'
 
 
 
@@ -80,5 +79,3 @@ From: pytorch/pytorch:2.2.2-cuda12.1-cudnn8-runtime
 ############################
 # Cotainer Running
 ############################
-## 启动 Apptainer 容器, 用 GPU，必须带 --nv
-# apptainer exec --nv container/warp_moe.sif bash
