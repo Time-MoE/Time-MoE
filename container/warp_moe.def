@@ -66,10 +66,11 @@ From: pytorch/pytorch:2.2.2-cuda12.1-cudnn8-devel
 
 
 ############################
-# Cotainer build & verify
+# Cotainer build & Running
 ############################
 
-
+# apptainer build --fakeroot container/warp_moe.sif container/warp_moe.def
+# apptainer exec --nv container/warp_moe.sif bash
 
 
 
@@ -77,5 +78,17 @@ From: pytorch/pytorch:2.2.2-cuda12.1-cudnn8-devel
 
 
 ############################
-# Cotainer Running
+# Cotainer Verify
 ############################
+
+# which nvcc
+# nvcc --version
+
+
+# python - << 'EOF'
+# import flash_attn
+# import torch
+# print("flash_attn:", flash_attn.__version__)
+# print("torch:", torch.__version__)
+# print("cuda:", torch.cuda.is_available())
+# EOF
