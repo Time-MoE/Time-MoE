@@ -27,6 +27,15 @@ class TimeMoeConfig(PretrainedConfig):
             attention_dropout: float = 0.0,
             apply_aux_loss: bool = True,
             router_aux_loss_factor: float = 0.02,
+
+            ### AIR668
+            # --- MIRAGE: stage-conditioned routing ---
+            enable_stage_routing: bool = False,
+            stage_routing_num_fourier: int = 8,
+            stage_routing_max_freq: float = 10.0,
+            stage_routing_momentum: float = 0.01,
+            stage_routing_eps: float = 1e-5,
+
             tie_word_embeddings: bool = False,
             **kwargs,
     ):
@@ -55,6 +64,16 @@ class TimeMoeConfig(PretrainedConfig):
         self.attention_dropout = attention_dropout
         self.apply_aux_loss = apply_aux_loss
         self.router_aux_loss_factor = router_aux_loss_factor
+        
+        ### AIR668
+        # --- MIRAGE: stage-conditioned routing ---
+        self.enable_stage_routing = enable_stage_routing
+        self.stage_routing_num_fourier = stage_routing_num_fourier
+        self.stage_routing_max_freq = stage_routing_max_freq
+        self.stage_routing_momentum = stage_routing_momentum
+        self.stage_routing_eps = stage_routing_eps
+
+
 
         assert self.use_dense ^ self.apply_aux_loss, 'Both use_dense and apply_aux_loss cannot be set to True or False at the same time.'
 
