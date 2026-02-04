@@ -1,3 +1,4 @@
+from logging import config
 import math
 from typing import Optional, Tuple, List, Union
 import warnings
@@ -275,6 +276,35 @@ class TimeMoeSparseExpertsLayer(nn.Module):
 
         # gating
         self.gate = nn.Linear(config.hidden_size, config.num_experts, bias=False)
+
+        ### AIR668 Begin1
+        # --- MIRAGE: stage-conditioned routing ---
+        self.enable_stage_routing = getattr(config, "enable_stage_routing", False)
+        if self.enable_stage_routing:
+            R = int(getattr(config, "stage_routing_num_fourier", 8))
+            max_freq = float(getattr(config, "stage_routing_max_freq", 10.0))
+            self.stage_momentum = float(getattr(config, "stage_routing_momentum", 0.01))
+            self.stage_eps = float(getattr(config, "stage_routing_eps", 1e-5))
+
+            # token-local stage probe (causal: depends only on current token state)
+            self.stage_probe = nn.Linear(config.hidden_size, 1, bias=True)
+
+            # Fourier features frequencies (log-spaced)
+            # torch.logspace uses base 10: 10^start ... 10^end
+            end = math.log10(max_freq) if max_freq > 1.0 else 0.0
+            omega = torch.logspace(0.0, end, steps=R)
+
+            self.register_buffer("stage_omega", omega, persistent=False)
+
+            # stage-to-expert bias: (2R) -> num_experts
+            self.stage_router = nn.Linear(2 * R, config.num_experts, bias=False)
+
+            # running stats for probe normalization (stabilizes routing)
+            self.register_buffer("stage_running_mean", torch.zeros(1), persistent=False)
+            self.register_buffer("stage_running_var", torch.ones(1), persistent=False)
+        ### AIR668 End1
+        
+
         self.experts = nn.ModuleList(
             [TimeMoeTemporalBlock(
                 hidden_size=self.config.hidden_size,
@@ -296,6 +326,38 @@ class TimeMoeSparseExpertsLayer(nn.Module):
         hidden_states = hidden_states.view(-1, hidden_dim)
         # router_logits -> (batch * sequence_length, n_experts)
         router_logits = self.gate(hidden_states)
+
+        ### AIR668 Begin2
+        # --- MIRAGE: stage-conditioned routing ---
+        if self.enable_stage_routing:
+            z = self.stage_probe(hidden_states)  # [N, 1], N = batch*seq
+
+            if self.training:
+                batch_mean = z.mean()
+                batch_var = z.var(unbiased=False)
+
+                # update running stats (no gradient through stats)
+                with torch.no_grad():
+                    m = self.stage_momentum
+                    self.stage_running_mean.mul_(1.0 - m).add_(m * batch_mean.detach())
+                    self.stage_running_var.mul_(1.0 - m).add_(m * batch_var.detach())
+
+            mean = self.stage_running_mean
+            var = self.stage_running_var
+            z_norm = (z - mean) / torch.sqrt(var + self.stage_eps)  # [N,1]
+
+            omega = self.stage_omega.to(z_norm.device)  # [R]
+            # broadcasting: [N,1]*[R] -> [N,R]
+            sin_feat = torch.sin(z_norm * omega)
+            cos_feat = torch.cos(z_norm * omega)
+            phi = torch.cat([sin_feat, cos_feat], dim=-1)  # [N, 2R]
+
+            stage_bias = self.stage_router(phi)  # [N, num_experts]
+            router_logits = router_logits + stage_bias
+        ### AIR668 End2
+
+
+
 
         routing_weights = F.softmax(router_logits, dim=1, dtype=torch.float)
         routing_weights, selected_experts = torch.topk(routing_weights, self.top_k, dim=-1)

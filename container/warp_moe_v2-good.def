@@ -1,0 +1,32 @@
+Bootstrap: docker
+From: pytorch/pytorch:2.2.2-cuda12.1-cudnn8-runtime
+
+%labels
+    Author chengjie.zheng001
+    Project WARP-MoE_26KDD
+
+%environment
+    export LC_ALL=C.UTF-8
+    export LANG=C.UTF-8
+    export PYTHONDONTWRITEBYTECODE=1
+    export PIP_NO_CACHE_DIR=1
+    export PYTHONNOUSERSITE=1
+    export PIP_USER=0
+
+%post
+    set -eux
+
+    apt-get update && apt-get install -y --no-install-recommends         git wget curl ca-certificates         build-essential         && rm -rf /var/lib/apt/lists/*
+
+    python -m pip install --upgrade pip setuptools wheel
+
+    # 生成 requirements 文件（不依赖 %files）
+    echo "cHl5YW1sCm51bXB5CnBhbmRhcwp0b3JjaApzY2lraXQtbGVhcm4KCnRyYW5zZm9ybWVycz09NC40MC4xCmRhdGFzZXRzPT0yLjE4LjAKYWNjZWxlcmF0ZT09MC4yOC4w" | base64 -d > /tmp/requirements.txt
+    ls -l /tmp/requirements.txt
+    head -n 5 /tmp/requirements.txt || true
+
+    # 你的额外工具（可留可删）
+    python -m pip install --no-cache-dir jupyterlab wandb
+
+    # 安装项目依赖
+    python -m pip install --no-cache-dir -r /tmp/requirements.txt

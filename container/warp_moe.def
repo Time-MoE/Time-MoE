@@ -1,0 +1,94 @@
+Bootstrap: docker
+From: pytorch/pytorch:2.2.2-cuda12.1-cudnn8-devel
+
+%labels
+    Author chengjie.zheng001
+    Project WARP-MoE_26KDD
+
+%environment
+    export LC_ALL=C.UTF-8
+    export LANG=C.UTF-8
+    export PYTHONDONTWRITEBYTECODE=1
+    export PYTHONNOUSERSITE=1
+    export PIP_NO_CACHE_DIR=1
+    export PIP_DISABLE_PIP_VERSION_CHECK=1
+
+%post
+    set -eux
+
+    # System deps
+    apt-get update && apt-get install -y --no-install-recommends \
+        git wget curl ca-certificates \
+        build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+    # Python packaging tooling
+    python -m pip install --upgrade pip setuptools wheel
+
+    # Project runtime deps (explicit; do NOT rely on requirements.txt)
+    python -m pip install --no-cache-dir \
+        pyyaml \
+        numpy \
+        pandas \
+        scikit-learn \
+        transformers==4.40.1 \
+        datasets==2.18.0 \
+        accelerate==0.28.0
+
+    # flash-attn build deps
+    python -m pip install --no-cache-dir packaging ninja einops
+
+    # flash-attn (compile from source, requires nvcc)
+    MAX_JOBS=64 python -m pip install --no-cache-dir \
+        flash-attn==2.6.3 --no-build-isolation
+
+
+    # Optional dev tools (remove if you want a smaller "train-only" image)
+    python -m pip install --no-cache-dir \
+        jupyterlab \
+        wandb
+
+    # Build-time sanity checks (fail fast if anything is missing)
+    python -c "import sys; print('PY:', sys.executable)"
+    python -c "import torch; print('TORCH:', torch.__version__, 'CUDA:', torch.cuda.is_available())"
+    python -c "import transformers, datasets, accelerate; print('OK', transformers.__version__, datasets.__version__, accelerate.__version__)"
+
+%runscript
+    # Default behavior: run whatever command is provided (or open a shell)
+    exec bash -lc "$@"
+
+
+
+
+
+
+
+
+
+############################
+# Cotainer build & Running
+############################
+
+# apptainer build --fakeroot container/warp_moe.sif container/warp_moe.def
+# apptainer exec --nv container/warp_moe.sif bash
+
+
+
+
+
+
+############################
+# Cotainer Verify
+############################
+
+# which nvcc
+# nvcc --version
+
+
+# python - << 'EOF'
+# import flash_attn
+# import torch
+# print("flash_attn:", flash_attn.__version__)
+# print("torch:", torch.__version__)
+# print("cuda:", torch.cuda.is_available())
+# EOF

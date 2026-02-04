@@ -170,15 +170,38 @@ def evaluate(args):
     print(f'{rank} - {ret_metric}')
 
     metric_tensors = [metric.value for metric in metric_list] + [acc_count]
+
+
+
+    ### AIR668
     if is_dist:
         stat_tensor = torch.tensor(metric_tensors).to(model.device)
-        gathered_results = [torch.zeros_like(stat_tensor) for _ in range(world_size)]
-        dist.all_gather(gathered_results, stat_tensor)
-        all_stat = torch.stack(gathered_results, dim=0).sum(dim=0)
-    else:
-        all_stat = metric_tensors
+        world_size = dist.get_world_size()
+        rank = dist.get_rank()
 
-    if rank == 0:
+        if world_size > 1:
+            gathered = [None for _ in range(world_size)]
+            dist.gather_object(
+                stat_tensor.cpu(),
+                gathered if rank == 0 else None,
+                dst=0
+            )
+
+            if rank == 0:
+                all_stat = sum(gathered)
+            else:
+                all_stat = None
+        else:
+            all_stat = stat_tensor
+    else:
+        all_stat = torch.tensor(metric_tensors)
+
+
+
+
+        
+    ### AIR668
+    if (not is_dist) or rank == 0:
         item = {
             'model': args.model,
             'data': args.data,
@@ -191,6 +214,12 @@ def evaluate(args):
             val = all_stat[i] / count
             item[metric.name] = float(val.cpu().numpy())
         logging.info(item)
+
+
+
+
+
+
 
 
 if __name__ == '__main__':
