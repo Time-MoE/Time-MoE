@@ -36,6 +36,23 @@ class TimeMoeConfig(PretrainedConfig):
             stage_routing_momentum: float = 0.01,
             stage_routing_eps: float = 1e-5,
 
+            ### AIR668 Begin1
+            # --- MIRAGE: progression + weak-order + alignment ---
+            mirage_proj_dim: int = 128,
+            mirage_pooling: str = "last",          # {"last","mean"}
+            mirage_rank_beta: float = 0.02,        # recommend ~ 1/median(|Δt|)
+            mirage_learn_beta: bool = False,
+            mirage_use_pair_weight: bool = True,
+
+            mirage_num_prototypes: int = 10,       # stage bins / prototypes
+            mirage_tau: float = 0.1,               # prototype softmax temperature
+            mirage_proto_momentum: float = 0.95,   # EMA momentum for prototypes
+            mirage_update_prototypes: bool = True, # EMA update during training
+
+            mirage_lambda_rank: float = 0.1,
+            mirage_lambda_align: float = 0.05,
+            ### AIR668 End1
+
             tie_word_embeddings: bool = False,
             **kwargs,
     ):
@@ -72,6 +89,25 @@ class TimeMoeConfig(PretrainedConfig):
         self.stage_routing_max_freq = stage_routing_max_freq
         self.stage_routing_momentum = stage_routing_momentum
         self.stage_routing_eps = stage_routing_eps
+
+        ### AIR668 Begin2
+        # --- MIRAGE ---
+        self.mirage_proj_dim = mirage_proj_dim
+        self.mirage_pooling = mirage_pooling
+        self.mirage_rank_beta = mirage_rank_beta
+        self.mirage_learn_beta = mirage_learn_beta
+        self.mirage_use_pair_weight = mirage_use_pair_weight
+
+        self.mirage_num_prototypes = mirage_num_prototypes
+        self.mirage_tau = mirage_tau
+        self.mirage_proto_momentum = mirage_proto_momentum
+        self.mirage_update_prototypes = mirage_update_prototypes
+
+        self.mirage_lambda_rank = mirage_lambda_rank
+        self.mirage_lambda_align = mirage_lambda_align
+        ### AIR668 End2
+
+
 
 
 

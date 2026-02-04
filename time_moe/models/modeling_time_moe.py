@@ -277,7 +277,7 @@ class TimeMoeSparseExpertsLayer(nn.Module):
         # gating
         self.gate = nn.Linear(config.hidden_size, config.num_experts, bias=False)
 
-        ### AIR668
+        ### AIR668 Begin1
         # --- MIRAGE: stage-conditioned routing ---
         self.enable_stage_routing = getattr(config, "enable_stage_routing", False)
         if self.enable_stage_routing:
@@ -302,6 +302,7 @@ class TimeMoeSparseExpertsLayer(nn.Module):
             # running stats for probe normalization (stabilizes routing)
             self.register_buffer("stage_running_mean", torch.zeros(1), persistent=False)
             self.register_buffer("stage_running_var", torch.ones(1), persistent=False)
+        ### AIR668 End1
         
 
         self.experts = nn.ModuleList(
@@ -326,7 +327,7 @@ class TimeMoeSparseExpertsLayer(nn.Module):
         # router_logits -> (batch * sequence_length, n_experts)
         router_logits = self.gate(hidden_states)
 
-        ### AIR668
+        ### AIR668 Begin2
         # --- MIRAGE: stage-conditioned routing ---
         if self.enable_stage_routing:
             z = self.stage_probe(hidden_states)  # [N, 1], N = batch*seq
@@ -353,6 +354,7 @@ class TimeMoeSparseExpertsLayer(nn.Module):
 
             stage_bias = self.stage_router(phi)  # [N, num_experts]
             router_logits = router_logits + stage_bias
+        ### AIR668 End2
 
 
 
